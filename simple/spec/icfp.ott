@@ -2,8 +2,9 @@
 defns
 IDisjoint :: '' ::=
 
-defn A *i B :: :: icfpDisjoint  :: 'ID_'
-{{ com ICFP Disjointness }}
+defn A *i B :: :: icfpDisjoint  :: ID_
+{{ tex [[A]] *_i [[B]] }}
+{{ com Algorithmic disjointness of \lambdai }}
 by
 
 
@@ -29,8 +30,9 @@ A *ax B
 A *i B
 
 
-defn A *ax B :: :: icfpDisjointAx :: 'IDax_'
-{{ com ICFP Disjointness }}
+defn A *ax B :: :: icfpDisjointAx :: IDax_
+{{ tex [[A]] *_{ax} [[B]] }}
+{{ com Algorithmic disjointness of \lambdai (Axioms) }}
 by
 
 
@@ -67,7 +69,7 @@ G |= A -> B
 
 G |= A
 G |= B
-A *i B
+A <*> B
 ------------- :: and
 G |= A & B
 
@@ -76,38 +78,40 @@ defns
 ISubtyping :: '' ::=
 
 defn
-A <<<: B  :: :: isub :: IS_
+A <<i: B  :: :: isub :: IS_
 {{ com icfp Subtyping (Restricted) }}
-{{ tex [[A]] [[<:]] [[B]] }}
+{{ tex [[A]] \lessdot [[B]] }}
 by
 
 
 ---------------------- :: z
-int <<<: int 
+int <<i: int 
 
 --------------- :: top
-A <<<: Top 
+A <<i: Top 
 
 
-B1 <<<: A1 
-A2 <<<: B2 
+B1 <<i: A1 
+A2 <<i: B2 
 ------------------------ :: arr
-A1 -> A2 <<<: B1 -> B2
+A1 -> A2 <<i: B1 -> B2
 
 
-A1 <<<: A3
+A1 <<i: A3
+ordinary A3
 ------------------------- :: andl1
-A1 & A2 <<<: A3
+A1 & A2 <<i: A3
 
 
-A2 <<<: A3
+A2 <<i: A3
+ordinary A3
 ------------------------- :: andl2
-A1 & A2 <<<: A3
+A1 & A2 <<i: A3
 
-A1 <<<: A2
-A1 <<<: A3
+A1 <<i: A2
+A1 <<i: A3
 ----------------- :: andr
-A1 <<<: A2 & A3
+A1 <<i: A2 & A3
 
 
 
@@ -118,7 +122,7 @@ ITyping :: '' ::=
 defn
 G |= ee dirflag A => e ::   :: ITyping :: 'ITyp_'
 {{ com icfp2016 Typing rules }}
-{{ tex [[G]][[|=]][[ee]][[:]][[A]] }}
+{{ tex [[G]][[|=]][[ee]][[dirflag]][[A]] }}
 by
 
 
@@ -141,7 +145,7 @@ G |= x => A => x
 G |= A
 G , x : A |= ee <= B => e
 ---------------------------------------------- :: lam
-G |= (\x . ee)  <= A->B  => (\x : A . e : B)
+G |= (\x . ee)  <= A->B  => (\x . e : A->B)
 
 
 G |= ee1 => A->B => e1
@@ -163,6 +167,69 @@ G |= ee:A => A => e
 
 
 G |= ee <= A => e
-A <<<: B
+A <<i: B
 --------------------- :: sub
 G |= ee => B => e : B
+
+
+
+defns
+IBTyping :: '' ::=
+
+defn
+G |= ee dirflag A ~> e ::   :: IBTyping :: 'IBTyp_'
+{{ com The extended bidirectional typing of \lambdai }}
+{{ tex [[G]][[|=]][[ee]][[dirflag]][[A]] \hlmath {\hookrightarrow [[e]]} }}
+by
+
+
+uniq G
+------------------- :: top
+G |= T => Top ~> T
+
+
+uniq G
+-------------------- :: lit
+G |= i => int ~> i
+
+
+uniq G
+x : A in G
+-------------------------- :: var
+G |= x => A ~> x
+
+
+G |= A
+G , x : A |= ee <= B ~> e
+------------------------------------------- :: lam
+G |= \x . ee <= A->B ~> (\x . e : A->B)
+
+
+G |= ee1 => A->B ~> e1
+G |= ee2 <= A ~> e2
+--------------------------- :: app
+G |= ee1 ee2 => B ~> e1 e2
+
+
+G |= ee1 => A ~> e1
+G |= ee2 => B ~> e2
+A <*> B
+-------------------------------------- :: merge
+G |= ee1 ,, ee2 => A & B ~> e1 ,, e2
+
+
+G |= ee <= A ~> e
+---------------------- :: anno
+G |= ee:A => A ~> e:A
+
+
+G |= ee => A ~> e
+A <: B
+------------------------ :: sub
+G |= ee <= B ~> e
+
+
+G |= A
+G , x : A |= ee <= A ~> e
+------------------------------------------- :: fix
+G |= fix x . ee <= A ~> fix x : A . e
