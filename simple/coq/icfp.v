@@ -92,7 +92,7 @@ Proof.
     lets [HT1 Era1]: IHTyp1.
     lets [HT2 Era2]: IHTyp2.
     simpl. split*. congruence.
-  -
+  - (* anno *)
     destruct IHTyp.
     apply subtyping_completeness in H.
     split*.

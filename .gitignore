@@ -21,6 +21,7 @@
 .bak
 CoqSrc.mk
 CoqSrc.mk.conf
+.CoqSrc.mk.d
 Makefile.coq
 Makefile.coq.conf
 .coqdeps.d

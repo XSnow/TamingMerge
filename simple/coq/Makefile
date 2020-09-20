@@ -40,7 +40,7 @@ $(SYNTAX)_ott.v: $(OTT_LOC)/rules.ott $(OTT_LOC)/dunfield.ott $(OTT_LOC)/icfp.ot
 		exit 1; \
 	fi >&2
 	@echo "coq embeded code inserted to $(SYNTAX)_ott.v"
-	sed -i '/(\* defns Typing \*)/ r $(OTT_LOC)/embeded_def.v' $(SYNTAX)_ott.v
+	sed -i '/(\* defns BidirectionalTyping \*)/ r $(OTT_LOC)/embeded_def.v' $(SYNTAX)_ott.v
 
 
 $(TARGET)_inf.v: $(OTT_LOC)/rules.ott
