@@ -78,7 +78,7 @@ Qed.
 
 Require Import Program.Equality.
 
-Hint Constructors sub.
+Hint Constructors sub : core.
 
 Lemma and_inversion : forall A B C,
     sub A (t_and B C) -> sub A B /\ sub A C.

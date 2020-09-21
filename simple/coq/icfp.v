@@ -61,40 +61,19 @@ Proof.
 Qed.
 
 
-(* completeness of typing with respect to the type system in ICFP 2016 *)
+(* completeness of typing with respect to the extended
+ bidirectional type system in ICFP 2016 *)
 Theorem typing_completeness : forall G ee dir A e,
-    ITyping G ee dir A e -> Typing G e dir A /\ |e| = ee.
+    IBTyping G ee dir A e -> Typing G e dir A.
 Proof.
-  introv Typ.
+  intros G ee dir A e Typ.
   induction* Typ.
-  -
-    split.
+  - (* abs *)
     eapply Typ_sub. eapply Typ_abs.
-    intros.
-    forwards* [? ?]: H1 H2.
-    auto_sub.
-    auto_sub.
-    simpl.
-    pick fresh x for (union L (union (fv_dexp (|e|)) (fv_dexp ee))).
-    forwards* [? ?]: H1.
-    rewrite erasure_open in H3.
-    simpl in H3.
-    forwards*: open_dexp_eqn H3.
-    congruence.
-  -
-    lets [HT1 Era1]: IHTyp1.
-    lets [HT2 Era2]: IHTyp2.
-    split*.
-    simpl.
-    congruence.
-  - (* disjoint *)
-    apply disjoint_completeness in H.
-    lets [HT1 Era1]: IHTyp1.
-    lets [HT2 Era2]: IHTyp2.
-    simpl. split*. congruence.
-  - (* anno *)
-    destruct IHTyp.
-    apply subtyping_completeness in H.
-    split*.
-    eapply Typ_anno. applys* Typing_chk_sub.
+    intros. applys* H1 H2.
+    apply sub_reflexivity.
+  - (* fixpoint *)
+    eapply Typ_sub. eapply Typ_fix.
+    intros. applys* H1 H2.
+    apply sub_reflexivity.
 Qed.

@@ -127,7 +127,7 @@ Proof.
     auto.
 Qed.
 
-Hint Resolve erasure_lc TypedReduce_lc.
+Hint Resolve erasure_lc TypedReduce_lc : core.
 
 Lemma star_onestep : forall a b,
     DunfieldStep a b -> a ->>*  b.
@@ -158,14 +158,8 @@ Lemma step_merger : forall v1 e2 e2',
     e2 ->>* e2' -> lc_dexp v1 -> DValue v1 -> (de_merge v1 e2) ->>* (de_merge v1 e2').
 Proof.
   intros v1 e2 e2' H LC Val.
-  induction H.
-  auto.
-  eapply star_trans.
-  apply star_onestep.
-  apply DStep_merger.
-  auto.
-  apply H.
-  auto.
+  induction~ H.
+  applys* star_trans.
 Qed.
 
 
@@ -173,14 +167,8 @@ Lemma step_appl : forall e1 e1' e2,
     e1 ->>* e1' -> lc_dexp e2 -> (de_app e1 e2) ->>* (de_app e1' e2).
 Proof.
   intros e1 e1' e2 H LC.
-  induction H.
-  auto.
-  eapply star_trans.
-  apply star_onestep.
-  apply DStep_appl.
-  auto.
-  apply H.
-  auto.
+  induction~ H.
+  applys* star_trans.
 Qed.
 
 
@@ -188,14 +176,8 @@ Lemma step_appr : forall v1 e2 e2',
     e2 ->>* e2' -> DValue v1 -> (de_app v1 e2) ->>* (de_app v1 e2').
 Proof.
   intros v1 e2 e2' H Val.
-  induction H.
-  auto.
-  eapply star_trans.
-  apply star_onestep.
-  apply DStep_appr.
-  auto.
-  apply H.
-  auto.
+  induction~ H.
+  applys* star_trans.
 Qed.
 
 

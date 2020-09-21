@@ -26,7 +26,7 @@ Inductive exp : Set :=  (*r expressions *)
  | e_merge (e1:exp) (e2:exp) (*r merge *)
  | e_anno (e:exp) (A:typ) (*r annotation *).
 
-Inductive dexp : Set :=  (*r Dunfield and lambdai's expressions *)
+Inductive dexp : Set :=  (*r expressions *)
  | de_var_b (_:nat) (*r variables *)
  | de_var_f (x:var) (*r variables *)
  | de_top : dexp (*r top *)
@@ -34,8 +34,8 @@ Inductive dexp : Set :=  (*r Dunfield and lambdai's expressions *)
  | de_abs (ee:dexp) (*r abstractions *)
  | de_app (ee1:dexp) (ee2:dexp) (*r applications *)
  | de_merge (ee1:dexp) (ee2:dexp) (*r merge *)
- | de_fixpoint (ee:dexp) (*r fixpoint *)
- | de_anno (ee:dexp) (A:typ) (*r only used in lambdai (icfp2016) *).
+ | de_ann (ee:dexp) (A:typ) (*r only used in lambdai (icfp2016) *)
+ | de_fixpoint (ee:dexp) (*r fixpoint *).
 
 Inductive st : Set :=  (*r input type or projection label *)
  | st_ty (A:typ).
@@ -62,8 +62,8 @@ Fixpoint open_dexp_wrt_dexp_rec (k:nat) (ee_5:dexp) (ee__6:dexp) {struct ee__6}:
   | (de_abs ee) => de_abs (open_dexp_wrt_dexp_rec (S k) ee_5 ee)
   | (de_app ee1 ee2) => de_app (open_dexp_wrt_dexp_rec k ee_5 ee1) (open_dexp_wrt_dexp_rec k ee_5 ee2)
   | (de_merge ee1 ee2) => de_merge (open_dexp_wrt_dexp_rec k ee_5 ee1) (open_dexp_wrt_dexp_rec k ee_5 ee2)
+  | (de_ann ee A) => de_ann (open_dexp_wrt_dexp_rec k ee_5 ee) A
   | (de_fixpoint ee) => de_fixpoint (open_dexp_wrt_dexp_rec (S k) ee_5 ee)
-  | (de_anno ee A) => de_anno (open_dexp_wrt_dexp_rec k ee_5 ee) A
 end.
 
 Fixpoint open_exp_wrt_exp_rec (k:nat) (e_5:exp) (e__6:exp) {struct e__6}: exp :=
@@ -136,12 +136,12 @@ Inductive lc_dexp : dexp -> Prop :=    (* defn lc_dexp *)
      (lc_dexp ee1) ->
      (lc_dexp ee2) ->
      (lc_dexp (de_merge ee1 ee2))
+ | lc_de_ann : forall (ee:dexp) (A:typ),
+     (lc_dexp ee) ->
+     (lc_dexp (de_ann ee A))
  | lc_de_fixpoint : forall (ee:dexp),
       ( forall x , lc_dexp  ( open_dexp_wrt_dexp ee (de_var_f x) )  )  ->
-     (lc_dexp (de_fixpoint ee))
- | lc_de_anno : forall (ee:dexp) (A:typ),
-     (lc_dexp ee) ->
-     (lc_dexp (de_anno ee A)).
+     (lc_dexp (de_fixpoint ee)).
 (** free variables *)
 Fixpoint fv_exp (e_5:exp) : vars :=
   match e_5 with
@@ -165,8 +165,8 @@ Fixpoint fv_dexp (ee_5:dexp) : vars :=
   | (de_abs ee) => (fv_dexp ee)
   | (de_app ee1 ee2) => (fv_dexp ee1) \u (fv_dexp ee2)
   | (de_merge ee1 ee2) => (fv_dexp ee1) \u (fv_dexp ee2)
+  | (de_ann ee A) => (fv_dexp ee)
   | (de_fixpoint ee) => (fv_dexp ee)
-  | (de_anno ee A) => (fv_dexp ee)
 end.
 
 (** substitutions *)
@@ -192,8 +192,8 @@ Fixpoint subst_dexp (ee_5:dexp) (x5:var) (ee__6:dexp) {struct ee__6} : dexp :=
   | (de_abs ee) => de_abs (subst_dexp ee_5 x5 ee)
   | (de_app ee1 ee2) => de_app (subst_dexp ee_5 x5 ee1) (subst_dexp ee_5 x5 ee2)
   | (de_merge ee1 ee2) => de_merge (subst_dexp ee_5 x5 ee1) (subst_dexp ee_5 x5 ee2)
+  | (de_ann ee A) => de_ann (subst_dexp ee_5 x5 ee) A
   | (de_fixpoint ee) => de_fixpoint (subst_dexp ee_5 x5 ee)
-  | (de_anno ee A) => de_anno (subst_dexp ee_5 x5 ee) A
 end.
 
 
@@ -439,13 +439,13 @@ Inductive DunfieldStep : dexp -> dexp -> Prop :=    (* defn DunfieldStep *)
      DunfieldStep ee1 ee1' ->
      DunfieldStep (de_app ee1 ee2) (de_app ee1' ee2)
  | DStep_appr : forall (vv1 ee2 ee2':dexp),
-     DValue vv1 ->
      DunfieldStep ee2 ee2' ->
+     DValue vv1 ->
      DunfieldStep (de_app vv1 ee2) (de_app vv1 ee2')
  | DStep_beta : forall (ee vv:dexp),
      lc_dexp (de_abs ee) ->
      DValue vv ->
-     DunfieldStep (de_app  ( (de_abs ee) )  vv)  (  (open_dexp_wrt_dexp  ee vv )  ) 
+     DunfieldStep (de_app  ( (de_abs ee) )  vv)  (open_dexp_wrt_dexp  ee vv ) 
  | DStep_fix : forall (ee:dexp),
      lc_dexp (de_fixpoint ee) ->
      DunfieldStep (de_fixpoint ee)  (open_dexp_wrt_dexp  ee (de_fixpoint ee) ) 
@@ -462,8 +462,8 @@ Inductive DunfieldStep : dexp -> dexp -> Prop :=    (* defn DunfieldStep *)
      DunfieldStep ee1 ee1' ->
      DunfieldStep (de_merge ee1 ee2) (de_merge ee1' ee2)
  | DStep_merger : forall (vv1 ee2 ee2':dexp),
-     DValue vv1 ->
      DunfieldStep ee2 ee2' ->
+     DValue vv1 ->
      DunfieldStep (de_merge vv1 ee2) (de_merge vv1 ee2')
  | DStep_split : forall (ee:dexp),
      lc_dexp ee ->
@@ -512,7 +512,7 @@ Inductive WF : ctx -> typ -> Prop :=    (* defn WF *)
  | Wf_and : forall (G:ctx) (A B:typ),
      WF G A ->
      WF G B ->
-     icfpDisjoint A B ->
+      disjointSpec  A   B  ->
      WF G (t_and A B).
 
 (* defns ISubtyping *)
@@ -527,9 +527,11 @@ Inductive isub : typ -> typ -> Prop :=    (* defn isub *)
      isub (t_arrow A1 A2) (t_arrow B1 B2)
  | IS_andl1 : forall (A1 A2 A3:typ),
      isub A1 A3 ->
+     ord A3 ->
      isub (t_and A1 A2) A3
  | IS_andl2 : forall (A1 A2 A3:typ),
      isub A2 A3 ->
+     ord A3 ->
      isub (t_and A1 A2) A3
  | IS_andr : forall (A1 A2 A3:typ),
      isub A1 A2 ->
@@ -563,14 +565,51 @@ Inductive ITyping : ctx -> dexp -> dirflag -> typ -> exp -> Prop :=    (* defn I
      ITyping G (de_merge ee1 ee2) Inf (t_and A B) (e_merge e1 e2)
  | ITyp_anno : forall (G:ctx) (ee:dexp) (A:typ) (e:exp),
      ITyping G ee Chk A e ->
-     ITyping G (de_anno ee A) Inf A (e_anno e A)
+     ITyping G (de_ann ee A) Inf A e
  | ITyp_sub : forall (G:ctx) (ee:dexp) (B:typ) (e:exp) (A:typ),
      ITyping G ee Chk A e ->
      isub A B ->
      ITyping G ee Inf B (e_anno e B).
 
+(* defns IBTyping *)
+Inductive IBTyping : ctx -> dexp -> dirflag -> typ -> exp -> Prop :=    (* defn IBTyping *)
+ | IBTyp_top : forall (G:ctx),
+      uniq  G  ->
+     IBTyping G de_top Inf t_top e_top
+ | IBTyp_lit : forall (G:ctx) (i5:i),
+      uniq  G  ->
+     IBTyping G (de_lit i5) Inf t_int (e_lit i5)
+ | IBTyp_var : forall (G:ctx) (x:var) (A:typ),
+      uniq  G  ->
+      binds  x A G  ->
+     IBTyping G (de_var_f x) Inf A (e_var_f x)
+ | IBTyp_lam : forall (L:vars) (G:ctx) (ee:dexp) (A B:typ) (e:exp),
+     WF G A ->
+      ( forall x , x \notin  L  -> IBTyping  (cons ( x , A )  G )   ( open_dexp_wrt_dexp ee (de_var_f x) )  Chk B  ( open_exp_wrt_exp e (e_var_f x) )  )  ->
+     IBTyping G (de_abs ee) Chk (t_arrow A B)  ( (e_abs A e B) ) 
+ | IBTyp_app : forall (G:ctx) (ee1 ee2:dexp) (B:typ) (e1 e2:exp) (A:typ),
+     IBTyping G ee1 Inf (t_arrow A B) e1 ->
+     IBTyping G ee2 Chk A e2 ->
+     IBTyping G (de_app ee1 ee2) Inf B (e_app e1 e2)
+ | IBTyp_merge : forall (G:ctx) (ee1 ee2:dexp) (A B:typ) (e1 e2:exp),
+     IBTyping G ee1 Inf A e1 ->
+     IBTyping G ee2 Inf B e2 ->
+      disjointSpec  A   B  ->
+     IBTyping G (de_merge ee1 ee2) Inf (t_and A B) (e_merge e1 e2)
+ | IBTyp_anno : forall (G:ctx) (ee:dexp) (A:typ) (e:exp),
+     IBTyping G ee Chk A e ->
+     IBTyping G (de_ann ee A) Inf A (e_anno e A)
+ | IBTyp_sub : forall (G:ctx) (ee:dexp) (B:typ) (e:exp) (A:typ),
+     IBTyping G ee Inf A e ->
+     sub A B ->
+     IBTyping G ee Chk B e
+ | IBTyp_fix : forall (L:vars) (G:ctx) (ee:dexp) (A:typ) (e:exp),
+     WF G A ->
+      ( forall x , x \notin  L  -> IBTyping  (cons ( x , A )  G )   ( open_dexp_wrt_dexp ee (de_var_f x) )  Chk A  ( open_exp_wrt_exp e (e_var_f x) )  )  ->
+     IBTyping G (de_fixpoint ee) Chk A (e_fixpoint A e).
+
 
 (** infrastructure *)
-Hint Constructors value topLike ord disjoint sub subsub arrTyp TypedReduce step Typing DValue DunfieldStep icfpDisjoint icfpDisjointAx WF isub ITyping lc_exp lc_dexp : core.
+Hint Constructors value topLike ord disjoint sub subsub arrTyp TypedReduce step Typing DValue DunfieldStep icfpDisjoint icfpDisjointAx WF isub ITyping IBTyping lc_exp lc_dexp : core.
 
 

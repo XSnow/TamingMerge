@@ -63,9 +63,9 @@ Section Star.
 
 End Star.
 
-Hint Constructors star.
+Hint Constructors star : core.
 
-Hint Resolve star_trans star_one.
+Hint Resolve star_trans star_one : core.
 
 
 Definition mul_dstep := star dexp DunfieldStep.

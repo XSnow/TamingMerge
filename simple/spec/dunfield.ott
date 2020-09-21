@@ -10,9 +10,9 @@
 
 grammar
 
-dexp, ee {{ tex E }}, vv {{ tex V }}, one_ee {{ tex 1 }}, two_ee {{ tex 2 }} :: 'de_'     ::=       {{ com Dunfield and lambdai's expressions }}
+dexp, ee {{ tex E }}, vv {{ tex V }}   :: 'de_'     ::=       {{ com expressions }}
   | x              ::  :: var     {{ com variables }}
-  | T              ::  :: top     {{ com top }}
+  | T              ::  :: top     {{ com top }} {{ tex \top }}
   | i              ::  :: lit     {{ com lit }}
   | \ x . ee
                    ::  :: abs       (+ bind x in ee +)
@@ -20,11 +20,12 @@ dexp, ee {{ tex E }}, vv {{ tex V }}, one_ee {{ tex 1 }}, two_ee {{ tex 2 }} :: 
 	                            {{ tex [[\]][[x]].\,[[ee]] }}
   | ee1 ee2          ::  :: app     {{ com applications }}
   | ee1 ,, ee2       ::  :: merge   {{ com merge }}
+                                    {{ tex [[ee1]]\,[[,,]]\,[[ee2]] }}
+  | ee : A           ::  :: ann     {{ com only used in lambdai (icfp2016) }}
   | fix x . ee       ::  :: fixpoint
                                     (+ bind x in ee +)
                                     {{ com fixpoint }}
-                                    {{ tex [[fix]][[x]].\,[[ee]] }}
-  | ee : A           ::  :: anno    {{ com only used in lambdai (icfp2016) }}
+                                    {{ tex [[fix]]\,[[x]].\,[[ee]] }}
   | ee1 [ x ~> ee2 ] :: M:: subst   {{ coq (open_dexp_wrt_dexp [[x ee1]][[ee2]]) }}
   | ( ee )           :: S:: paren   {{ coq ([[ee]]) }}
 
@@ -76,7 +77,7 @@ DSemantics :: '' ::=
 
 defn
 ee ~->  ee'  :: :: DunfieldStep :: DStep_
-{{ tex [[ee]]~[[~->]]~[[ee']] }}
+{{ tex [[ee]][[~->]][[ee']] }}
 {{ com Operational semantics }}
 by
 
@@ -86,15 +87,15 @@ ee1  ~->   ee1'
 ee1 ee2  ~->  ee1' ee2 
 
 
-value_dun vv1
 ee2  ~->   ee2'
+value_dun vv1
 ------------------------------------- :: appr
 vv1 ee2  ~->  vv1 ee2' 
 
 
 value_dun vv
 -----------------------------------------------------  :: beta
-(\ x . ee)  vv  ~->  ( ee [ x ~> vv ] )
+(\ x . ee)  vv  ~->   ee [ x ~> vv ] 
 
 
 -----------------------------------------------------  :: fix
@@ -114,8 +115,8 @@ ee1  ~->  ee1'
 ee1 ,, ee2 ~->   ee1' ,, ee2
 
 
-value_dun vv1
 ee2  ~->  ee2'
+value_dun vv1
 ------------------------------------------ :: merger
 vv1 ,, ee2  ~->   vv1 ,, ee2'
 
