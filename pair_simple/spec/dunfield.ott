@@ -1,0 +1,138 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% METAVARIABLES
+
+%metavar var, x , y ::= {{ repr-locally-nameless }}
+
+%metavar i, l ::= {{ coq nat }}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% GRAMMAR (LNgen portion)
+
+grammar
+
+dexp, ee {{ tex E }}, vv {{ tex V }}   :: 'de_'     ::=       {{ com expressions }}
+  | x              ::  :: var     {{ com variables }}
+  | T              ::  :: top     {{ com top }} {{ tex \top }}
+  | i              ::  :: lit     {{ com lit }}
+  | \ x . ee
+                   ::  :: abs       (+ bind x in ee +)
+                                    {{ com abstractions }}
+	                            {{ tex [[\]][[x]].\,[[ee]] }}
+  | ee1 ee2          ::  :: app     {{ com applications }}
+  | ee1 ,, ee2       ::  :: merge   {{ com merge }}
+                                    {{ tex [[ee1]]\,[[,,]]\,[[ee2]] }}
+  | ee1 , ee2        ::  :: pair    {{ com pair }}
+  | projl ee         ::  :: projl   {{ com projection 1 }}
+  | projr ee         ::  :: projr   {{ com projection 2 }}
+  | ee : A           ::  :: ann     {{ com only used in lambdai (icfp2016) }}
+  | fix x . ee       ::  :: fixpoint
+                                    (+ bind x in ee +)
+                                    {{ com fixpoint }}
+                                    {{ tex [[fix]]\,[[x]].\,[[ee]] }}
+  | ee1 [ x ~> ee2 ] :: M:: subst   {{ coq (open_dexp_wrt_dexp [[x ee1]][[ee2]]) }}
+  | ( ee )           :: S:: paren   {{ coq ([[ee]]) }}
+
+substitutions
+  single dexp x   :: subst
+
+
+freevars
+  dexp x      :: fv
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+defns
+DValue :: '' ::=
+
+
+defn
+value_dun vv ::  :: DValue :: DVal_ {{ com Dunfield's Values }} {{ tex }}
+by
+
+
+---------------------- :: var
+value_dun x
+
+
+---------------------- :: top
+value_dun T
+
+
+---------------------- :: nat
+value_dun i
+
+
+--------------------------------- :: abs
+value_dun \x . ee
+
+
+value_dun vv1
+value_dun vv2
+----------------------- :: merge
+value_dun vv1 ,, vv2
+
+
+
+defns
+DSemantics :: '' ::=
+
+defn
+ee ~->  ee'  :: :: DunfieldStep :: DStep_
+{{ tex [[ee]][[~->]][[ee']] }}
+{{ com Operational semantics }}
+by
+
+
+ee1  ~->   ee1'
+------------------------------------- :: appl
+ee1 ee2  ~->  ee1' ee2 
+
+
+ee2  ~->   ee2'
+value_dun vv1
+------------------------------------- :: appr
+vv1 ee2  ~->  vv1 ee2' 
+
+
+value_dun vv
+-----------------------------------------------------  :: beta
+(\ x . ee)  vv  ~->   ee [ x ~> vv ] 
+
+
+-----------------------------------------------------  :: fix
+fix x . ee  ~->   ee [ x ~> fix x . ee ]
+
+
+------------------------------------------ :: unmergel
+ee1 ,, ee2 ~->   ee1
+
+
+------------------------------------------ :: unmerger
+ee1 ,, ee2 ~->   ee2
+
+
+ee1  ~->  ee1'
+------------------------------------------ :: mergel
+ee1 ,, ee2 ~->   ee1' ,, ee2
+
+
+ee2  ~->  ee2'
+value_dun vv1
+------------------------------------------ :: merger
+vv1 ,, ee2  ~->   vv1 ,, ee2'
+
+
+------------------------------------- :: split
+ee ~-> ee ,, ee 
+
+
+value_dun vv
+------------------------------------- :: top
+vv ~-> T
+
+
+value_dun vv
+------------------------------------- :: toparr
+T vv ~-> T
