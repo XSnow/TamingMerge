@@ -327,15 +327,9 @@ Inductive disjoint : typ -> typ -> Prop :=    (* defn disjoint *)
 Inductive sub : typ -> typ -> Prop :=    (* defn sub *)
  | S_z : 
      sub t_int t_int
- | S_top : forall (A:typ),
-     sub A t_top
- | S_toparr : forall (A B1 B2:typ),
-     sub t_top B2 ->
-     sub A (t_arrow B1 B2)
- | S_topprod : forall (A B1 B2:typ),
-     sub t_top B1 ->
-     sub t_top B2 ->
-     sub A (t_prod B1 B2)
+ | S_top : forall (A B:typ),
+     topLike B ->
+     sub A B
  | S_arr : forall (A1 A2 B1 B2:typ),
      sub B1 A1 ->
      sub A2 B2 ->
@@ -372,7 +366,7 @@ Inductive subsub : typ -> typ -> Prop :=    (* defn subsub *)
      subsub A2 B2 ->
      subsub (t_prod A1 A2) (t_prod B1 B2)
  | SubSub_top : forall (A:typ),
-     sub t_top A ->
+     topLike A ->
      subsub t_top A.
 
 (* defns ConvertToArrowType *)
