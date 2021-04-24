@@ -4,7 +4,6 @@ Require Import syntax_ott
                rules_inf.
 
 Require Import List. Import ListNotations.
-Require Import Strings.String.
 
 
 Definition relation (X:Type) := X -> X -> Prop.
@@ -63,8 +62,10 @@ Section Star.
 
 End Star.
 
+#[export]
 Hint Constructors star : core.
 
+#[export]
 Hint Resolve star_trans star_one : core.
 
 
@@ -185,44 +186,3 @@ Proof.
   sapply* multi_red_merge1.
   sapply* multi_red_merge2.
 Qed.
-
-
-(** Typing is preserved by substitution. *)
-
-
-
-(* doesn't hold in two anno *) (*
-Lemma typing_uniq: forall G e A B,
-    G |= e ~: A -> G |= e ~: B -> A = B.
-Proof.
-  intros G e A B Typ1 Typ2.
-  gen B.
-  induction Typ1;
-    introv Typ2;
-    try solve [inverts* Typ2].
-  - inverts* Typ2.
-    gen B.
-    induction H0;
-      introv Typ2;
-      inverts* Typ2.
-    forwards*: IHVtyping1.
-    forwards*: IHVtyping2.
-    congruence.
-  - (* f_var *)
-    inverts* Typ2.
-    forwards*: binds_unique H0 H4 H2.
-  - (* e_app *)
-    inverts* Typ2.
-    forwards*: IHTyp1_1.
-    forwards*: IHTyp1_2.
-    subst.
-    inverts* H0.
-  - (* and *)
-    inverts* Typ2.
-    forwards*: IHTyp1_1.
-    forwards*: IHTyp1_2.
-    congruence.
-Qed.
-*)
-
-(* typing canonical *)

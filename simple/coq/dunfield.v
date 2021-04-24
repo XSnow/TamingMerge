@@ -1,6 +1,5 @@
 Require Import LibTactics.
 Require Import Metalib.Metatheory.
-
 Require Import
         syntax_ott
         rules_inf
@@ -9,7 +8,7 @@ Require Import
         Deterministic
         Type_Safety
         rules_inf2.
-Require Import Coq.Strings.String.
+Require Import Lia.
 
 Fixpoint erase_anno (e:exp) : dexp :=
   match e with
@@ -26,12 +25,11 @@ Fixpoint erase_anno (e:exp) : dexp :=
 
 Notation "| e |" := (erase_anno e) (at level 30, e at level 39).
 
-Require Import Omega.
 
 Ltac size_ind_auto :=
   ( eapply_first_lt_hyp ;
     try reflexivity;
-    try omega ;
+    try lia ;
     try eauto ).
 
 
@@ -74,7 +72,7 @@ Proof.
     rewrite <- erasure_open.
     eapply_first_lt_hyp;
     try (apply size_exp_open_exp_wrt_exp_var);
-    try omega.
+    try lia.
     apply H3.
   - (* fix *)
     pick fresh x.
@@ -84,7 +82,7 @@ Proof.
     rewrite <- erasure_open.
     eapply_first_lt_hyp;
     try (apply size_exp_open_exp_wrt_exp_var);
-    try omega.
+    try lia.
     apply H3.
 Qed.
 
@@ -122,11 +120,11 @@ Proof.
   introv Red.
   induction Red;
     try solve [constructor*].
-  - Case "absv".
-    inverts H.
-    auto.
+  - (* absv *)
+    inverts~ H.
 Qed.
 
+#[export]
 Hint Resolve erasure_lc TypedReduce_lc : core.
 
 Lemma star_onestep : forall a b,
@@ -262,7 +260,6 @@ Proof.
     simpl.
     lets Val: erasure_val H.
     apply~ step_merger.
-    apply~ D_value_lc.
   -
     simpl.
     auto.

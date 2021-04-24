@@ -12,8 +12,6 @@ Require Import
 
 Require Import List. Import ListNotations.
 Require Import Arith Omega.
-Require Import Strings.String.
-
 
 
 (* requires sub Top A -> toplike A *)
@@ -73,6 +71,7 @@ Proof.
   - inverts* Val.
 Qed.
 
+#[export]
 Hint Immediate TypedReduce_prv_value : core.
 
 Lemma TypedReduce_preservation: forall v v' A,
@@ -84,10 +83,6 @@ Proof with auto.
   clear Typ' Sub. gen C.
   induction Red; intros;
     try solve [inverts* Typ].
-  - (* top *)
-    exists*.
-    apply toplike_super_top in H1.
-    eauto.
   - (* absv *)
     inverts Typ.
     exists*. split.
@@ -121,7 +116,7 @@ Proof.
   lets Typ' : Typ.
   inductions Typ;
     try solve [introv J; inverts* J]; introv J.
-  - Case "typing_app".
+  - (* typing_app *)
     inverts* J.
     + (* top *)
       inverts Typ1. inverts* H.
@@ -146,17 +141,17 @@ Proof.
       forwards* (?&?&?): IHTyp2.
       apply subsub2sub in H1.
       forwards*: Typing_chk_sub H0 H1.
-  - Case "Typ_merge".
+  - (* Typ_merge *)
     inverts* J.
     + forwards~ (?&?&?): IHTyp1 H4.
       exists (t_and x B). split*.
       apply~ Typ_merge.
-      forwards*: subsub_disjoint_l H1 H.
+      forwards*: subsub_disjointSpec_l H1 H.
     + forwards~ (?&?&?): IHTyp2 H4.
       exists (t_and A x). split*.
       apply~ Typ_merge.
-      forwards*: subsub_disjoint_r H1 H.
-  - Case "typing_anno".
+      forwards*: subsub_disjointSpec_r H1 H.
+  - (* typing_anno *)
     inverts J.
     + forwards*: TypedReduce_prv_value e e'.
       inverts* Typ'.
@@ -166,7 +161,7 @@ Proof.
       apply Typ_anno.
       apply subsub2sub in H0.
       forwards*: Typing_chk_sub H H0.
-  - Case "typing_fix".
+  - (* typing_fix *)
     inverts J.
     exists A. split*.
     eapply Typ_anno.
@@ -177,13 +172,13 @@ Proof.
     lets~ (?&?&?): Typing_subst_2 Typ_chk Typ'.
     apply subsub2sub in H2.
     forwards*: Typing_chk_sub H2.
-  - Case "typing_mergev".
+  - (* typing_mergev *)
     inverts J.
     + inverts H0.
       forwards*: step_not_value H5 H6.
     + inverts H0.
       forwards*: step_not_value H7 H6.
-  - Case "Typ_sub".
+  - (* Typ_sub *)
     forwards* (?&?&?): IHTyp.
     exists B. split*.
     apply subsub2sub in H1.
@@ -205,102 +200,84 @@ Proof.
   - sapply* Typing_chk_sub.
 Qed.
 
+#[export]
+Hint Resolve value_lc : core.
 
 (* Progress *)
 Lemma TypedReduce_progress: forall v A,
     value v -> Typing [] v Chk A -> exists v', TypedReduce v A v'.
-Proof.
+Proof with auto_sub.
   intros v A Val TypC.
-  lets* (B&Typ&Sub): Typing_chk2inf TypC. clear TypC. gen v B.
-  induction A; intros v Val.
-  - inductions Val; intros; inverts Typ; try solve [inverts Sub].
-    + exists*.
-    + lets Lc1: value_lc Val1.
-      lets Lc2: value_lc Val2.
-      inverts Sub.
-      forwards* (?&?): IHVal1 H5.
-      forwards* (?&?): IHVal2 H5.
-    + lets Lc1: value_lc Val1.
-      lets Lc2: value_lc Val2.
-      inverts Sub.
-      forwards* (?&?): IHVal1 H7.
-      forwards* (?&?): IHVal2 H7.
-  - lets Lc: value_lc Val.
-    intros. exists. apply~ TReduce_top.
-  - lets Lc: value_lc Val.
-    intros.
+  (* convert Chk to Inf & introduce B <: A*)
+  lets* (B&Typ&Sub): Typing_chk2inf TypC. clear TypC.
+  gen B.
+  induction A; intros.
+  - (* int *)
+    inductions Typ; inverts* Val;
+    try solve [inverts Sub; solve_false];
+    (* intersection <: ordinary type *)
+    try solve [forwards* [?|[?|(?&?&HF)]]: sub_inversion_and_l Sub;
+               try solve [forwards* (?&?): IHTyp1];
+               try solve [forwards* (?&?): IHTyp2];
+               try solve [inverts HF]].
+  - (* top *)
+    exists. apply~ TReduce_top.
+  - (* arrow *)
     destruct (toplike_decidable A2).
     + exists. apply~ TReduce_top.
-    + inductions Typ; try solve [inverts Val].
-      * exfalso. apply H0.
-        apply toplike_super_top in Sub.
+    + clear IHA1 IHA2.
+      inductions Typ; inverts* Val;
+    try solve [inverts Sub; solve_false];
+    (* intersection <: ordinary type *)
+    try solve [forwards* [?|[?|(?&?&HF)]]: sub_inversion_and_l Sub;
+               try solve [forwards* (?&?): IHTyp1];
+               try solve [forwards* (?&?): IHTyp2];
+               try solve [inverts HF]].
+      * (* arrow *)
         inverts* Sub.
-      * inverts Sub.
-        exfalso. apply H0.
-        apply~ toplike_super_top.
-      * clear H0.
-        inverts Val. inverts Lc.
-        lets* S1: sub_inversion_arrow_l Sub.
-        lets* S2: sub_inversion_arrow_r Sub.
-      * inverts Val. inverts Lc.
-        lets* [?|?]: sub_inversion_andl_arrr Sub.
-        ** forwards* (?&?): IHTyp1.
-        ** forwards* (?&?): IHTyp2.
-      * inverts Val. inverts Lc.
-        lets* [S | S]: sub_inversion_andl_arrr Sub.
-        ** forwards* [? ?]: IHTyp1 S.
-        ** forwards* [? ?]: IHTyp2 S.
-  - intros.
-    destruct~ (IHA1 _ Val _ Typ).
-    auto_sub.
-    destruct~ (IHA2 _ Val _ Typ).
-    auto_sub.
-    exists*.
+  - (* and *)
+    forwards* (?&?): IHA1...
+    forwards* (?&?): IHA2...
 Qed.
+
+#[export]
+Hint Resolve Typing_regular_1 : core.
 
 Theorem progress : forall e dir A,
     Typing nil e dir A ->
     value e \/ exists e', step e e' .
-Proof. (*
-  intro e.
-  induction e; intros T Typ; inverts Typ; *)
+Proof.
   introv Typ.
-  lets Typ': Typ.
   inductions Typ;
-    lets Lc  : Typing_regular_1 Typ';
-    try solve [inverts Heqflg];
-    subst;
     try solve [left*];
     try solve [right*].
-  - Case "var".
+  - (* var *)
     invert H0.
-  - Case "app".
-    right. inverts Lc.
+  - (* app *)
+    right.
     lets* [Val1 | [e1' Red1]]: IHTyp1.
     lets* [Val2 | [e2' Red2]]: IHTyp2.
     inverts* Typ1;
-      try solve [ inverts Val1 ].
-    all: inverts H.
-    + SCase "e_app (e_absv _ _) v2".
+      try solve [ inverts Val1 ]; inverts H.
+    + (* e_app (e_absv _ _) v2 *)
       lets* (v2' & Tyr): TypedReduce_progress Typ2.
-  - Case "merge".
-    inverts Lc.
+  - (* merge *)
     destruct~ IHTyp1 as [ Val1 | [t1' Red1]];
       destruct~ IHTyp2 as [ Val2 | [t2' Red2]];
       subst.
-    + SCase "e_merge v1 e2".
+    + (* e_merge v1 e2 *)
       inverts* Typ1.
-    + SCase "e_merge e1 v2".
+    + (* e_merge e1 v2 *)
       inverts* Typ2.
-    + SCase "e_merge e1 e2".
+    + (* e_merge e1 e2 *)
       inverts* Typ2.
-  - Case "anno".
-    right. inverts Lc.
+  - (* anno *)
+    right.
     destruct~ IHTyp as [? | (?&?)].
-    +
+    + (* value e *)
       lets* (v1' & Tyr) : TypedReduce_progress H.
     + exists*.
-  - Case "subsumption".
+  - (* subsumption *)
     destruct~ IHTyp.
 Qed.
 

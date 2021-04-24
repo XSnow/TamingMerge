@@ -354,9 +354,9 @@ Ltac fast_rm_inside E :=
 (** When tactic takes a natural number as argument, it may be
     parsed either as a natural number or as a relative number.
     In order for tactics to convert their arguments into natural numbers,
-    we provide a conversion tactic. 
-    
-    Note: the tactic [number_to_nat] is extended in [LibInt] to 
+    we provide a conversion tactic.
+
+    Note: the tactic [number_to_nat] is extended in [LibInt] to
     take into account the [int] type, alias for [Z]. *)
 
 Require Coq.Numbers.BinNums Coq.ZArith.BinInt.
@@ -2803,7 +2803,7 @@ Tactic Notation "inject" hyp(H) "as" ident(X1) ident(X2) ident(X3)
     are similar to [inverts] and [injects] except that they perform
     substitution on all equalities from the context and not only
     the ones freshly generated. The counterpart is that they have
-    simpler implementations. 
+    simpler implementations.
 
     DEPRECATED: these tactics should no longer be used. *)
 
@@ -2864,7 +2864,7 @@ Tactic Notation "cases" constr(E) :=
     Currently, this tactic is extended in LibReflect to clean up
     boolean propositions. *)
 
-Ltac case_if_post H := 
+Ltac case_if_post H :=
   tryfalse.
 
 (** [case_if] looks for a pattern of the form [if ?B then ?E1 else ?E2]
@@ -3148,14 +3148,14 @@ Tactic Notation "induction_wf" ":" constr(E) ident(X) :=
     (see LibTacticsDemos for an example) *)
 
 Require Import Coq.Arith.Compare_dec.
-Require Import Coq.omega.Omega.
+Require Import Coq.micromega.Lia.
 
 Lemma induct_height_max2 : forall n1 n2 : nat,
   exists n, n1 < n /\ n2 < n.
 Proof using.
   intros. destruct (lt_dec n1 n2).
-  exists (S n2). omega.
-  exists (S n1). omega.
+  exists (S n2). lia.
+  exists (S n1). lia.
 Qed.
 
 Ltac induct_height_step x :=
@@ -3193,8 +3193,8 @@ Ltac clear_coind :=
 
 (** Tactic [abstracts tac] is like [abstract tac] except that
     it clears the coinduction hypotheses so that the productivity
-    check will be happy. For example, one can use [abstracts omega]
-    to obtain the same behavior as [omega] but with an auxiliary
+    check will be happy. For example, one can use [abstracts lia]
+    to obtain the same behavior as [lia] but with an auxiliary
     lemma being generated. *)
 
 Tactic Notation "abstracts" tactic(tac) :=

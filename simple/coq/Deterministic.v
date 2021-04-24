@@ -9,8 +9,6 @@ Require Import
         Key_Properties
         Subtyping_inversion.
 
-Require Import Strings.String.
-
 
 (* if we want to build determinism on the right typing strictly, then we need to prove some lemma like A*B -> A&B <: C -> .|-v1,,v2:A&B -> v1 ~->C v1' -> A <: C *)
 (* then we might be able to drop the subtyping checking in tred *)
@@ -59,19 +57,17 @@ Qed.
 
 Theorem step_unique: forall A (e e1 e2 : exp),
     Typing nil e Chk A -> step e e1 -> step e e2 -> e1 = e2.
-Proof.
+Proof with try solve [exfalso; applys step_not_value; [ try assumption | eassumption]; auto].
   introv Typ Red1.
   gen A e2.
   lets Red1' : Red1.
   induction Red1;
     introv Typ Red2.
   - (* top *)
-    inverts* Red2.
-    + inverts H4.
-    + forwards*: step_not_value H4.
-  - Case "beta3".
-    inverts* Red2.
-    + SCase "beta3".
+    inverts* Red2...
+  - (* beta *)
+    inverts* Red2...
+    + (* beta *)
       inverts* Typ. inverts H2.
       inverts H11.
       * (* arrow *)
@@ -82,61 +78,46 @@ Proof.
         lets* (?&?): Typing_chk2inf H12. (* Typing condition for the following assert *)
         assert (v' = v'0) by forwards*: TypedReduce_unique H1 H9.
         congruence.
-    + SCase "app1".
-      inverts* H6.
-    + SCase "app2".
-      forwards*: step_not_value H6.
-  - Case "annov".
-    inverts* Red2.
-    + SCase "annov".
+  - (* annov *)
+    inverts* Red2...
+    + (* annov *)
       forwards*: TypedReduce_unique H0 H5.
       inverts* Typ. inverts* H1.
       lets* (?&?): Typing_chk2inf H7.
-    + SCase "anno".
-      forwards*: step_not_value H4.
-  - Case "appl".
-    inverts* Red2.
-    + SCase "top".
-      forwards*: step_not_value Red1.
-    + SCase "absv".
-      forwards*: step_not_value Red1.
-    + SCase "appl".
+  - (* appl *)
+    inverts* Red2;
+      try solve [forwards*: step_not_value Red1]...
+    + (* appl *)
       inverts* Typ. inverts H0.
       forwards*: IHRed1. subst~.
-    + SCase "appr".
-      forwards*: step_not_value Red1.
-  - Case "appr".
+  - (* appr *)
     inverts* Red2;
-      try solve [forwards*: step_not_value Red1].
-    + SCase "appl".
-      forwards*: step_not_value H4.
-    + SCase "appr".
+      try solve [forwards*: step_not_value Red1]...
+    + (* appr *)
       inverts* Typ. inverts H0.
       forwards*: IHRed1.
       congruence.
-  - Case "mergel".
+  - (* mergel *)
     inverts* Red2;
-      try solve [forwards*: step_not_value Red1].
-    + SCase "mergel".
+      try solve [forwards*: step_not_value Red1]...
+    + (* mergel *)
       inverts* Typ; inverts H0;
         forwards*: IHRed1;
         congruence.
-  - Case "merger".
+  - (* merger *)
     inverts* Red2;
-      try solve [forwards*: step_not_value Red1].
-    + SCase "mergel".
-      forwards*: step_not_value H4.
-    + SCase "merger".
+      try solve [forwards*: step_not_value Red1]...
+    + (* merger *)
       inverts* Typ; inverts H0;
         forwards*: IHRed1;
         congruence.
-  - Case "anno".
+  - (* anno *)
     inverts* Red2;
       inverts* Typ; inverts H;
       try solve [inverts* Red1];
-      try solve [lets*: step_not_value Red1].
+      try solve [lets*: step_not_value Red1]...
     forwards*: IHRed1.
     congruence.
-  - Case "fix".
+  - (* fix *)
     inverts* Red2.
 Qed.

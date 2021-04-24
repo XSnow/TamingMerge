@@ -6,8 +6,6 @@ Require Import syntax_ott
                Infrastructure.
 
 Require Import List. Import ListNotations.
-Require Import Strings.String.
-
 
 
 (* Check Mode *)
@@ -92,10 +90,10 @@ Lemma fv_in_dom: forall G e dir T,
 Proof.
   intros G e dir T H.
   induction H; simpl; try fsetdec.
-  - Case "typing_var".
+  - (* typing_var *)
     apply binds_In in H0.
     fsetdec.
-  - Case "typing_abs".
+  - (* typing_abs *)
     pick fresh x.
     assert (Fx : fv_exp (e ^ x) [<=] dom ([(x,A)] ++ G))
       by eauto.
@@ -103,7 +101,7 @@ Proof.
     assert (Fy : fv_exp e [<=] fv_exp (e ^ x)) by
         eapply fv_exp_open_exp_wrt_exp_lower.
     fsetdec.
-  - Case "typing_fix".
+  - (* typing_fix *)
     pick fresh x.
     assert (Fx : fv_exp (e ^ x) [<=] dom ([(x,A)] ++ G))
       by eauto.
@@ -197,8 +195,8 @@ Proof.
     forwards* (?&?&?): IHTyp2.
     exists (t_and x x0). split*.
     apply~ Typ_merge.
-    eapply subsub_disjoint_l. eassumption.
-    eapply subsub_disjoint_r. eassumption.
+    eapply subsub_disjointSpec_l. eassumption.
+    eapply subsub_disjointSpec_r. eassumption.
     assumption.
   - (* anno *)
     exists A. split*.
@@ -229,45 +227,7 @@ Proof.
     assert (sub x B) by auto_sub.
     forwards*: Typ_sub H0 H1.
 Qed.
-(*
-Lemma Typing_subst_1 : forall (E F : ctx) e u S dir T (z : atom),
-    Typing (F ++ [(z,S)] ++ E) e dir T ->
-    Typing E u Inf S ->
-    Typing (F ++ E) ([z ~> u] e) dir T.
-Proof.
-  intros.
-  remember (F ++ [(z,S)] ++ E) as E'.
-  generalize dependent F.
-  induction H; intros F Eq; subst; simpl; autos*;
-    lets Lc  : Typing_regular_1 H0;
-    lets Uni : Typing_regular_2 H0.
-  -
-    case_if*.
-    substs.
-    assert (A = S).
-    eapply binds_mid_eq; eauto.
-    substs.
-    apply~ Typing_weakening.
-    solve_uniq.
-  -
-    pick fresh x and apply Typ_abs; eauto.
-    rewrite subst_exp_open_exp_wrt_exp_var; auto.
-    rewrite_env (([(x, A)] ++ F) ++ E).
-    apply~ H1.
-  -
-    pick fresh x and apply Typ_fix.
-    rewrite subst_exp_open_exp_wrt_exp_var; auto.
-    rewrite_env (([(x, A)] ++ F) ++ E).
-    apply~ H1.
-  -
-    lets : ((subst_value _ _ _ z u) H2).
-    lets : ((subst_value _ _ _ z u) H3).
-    rewrite H5.
-    rewrite H6.
-    apply~ Typ_mergev.
-    solve_uniq.
-Qed.
-*)
+
 (* stronger than inf unique *)
 Lemma Typing_strenthening : forall G e A1 A2,
     []  ⊢ e ⇒ A1 ->
@@ -305,14 +265,6 @@ Proof.
     forwards * : IHTy1_1 H6.
     forwards * : IHTy1_2 H8.
     substs*.
-    (*
-  - Case "t_rcd".
-    forwards * : IHTy1 H1.
-    substs*.
-  - Case "t_proj".
-    forwards * : IHTy1 H1.
-    inverts~ H.
-     *)
 Qed.
 
 Lemma inference_unique : forall G e A1 A2,
@@ -352,16 +304,7 @@ Proof.
     forwards *: IHTy1_1 H6.
     forwards *: IHTy1_2 H8.
     substs*.
-    (*
-  - Case "t_rcd".
-    forwards * : IHTy1 H1.
-    substs*.
-  - Case "t_proj".
-    forwards * : IHTy1 H1.
-    inverts~ H.
-     *)
 Qed.
-
 
 
 (* Infer Mode & Check Mode *)
