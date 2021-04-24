@@ -44,9 +44,29 @@ Proof.
       try solve [inverts* H].
 Qed.
 
+Lemma toplike_sub: forall A B,
+    topLike A -> sub A B -> topLike B.
+Proof.
+  introv TL S.
+  induction S; inverts* TL.
+Qed.
+
+Lemma toplike_decidable : forall A,
+    topLike A \/ ~topLike A.
+Proof.
+  intros.
+  induction~ A;
+    try solve [ right; intros HF; inverts~ HF ].
+  - destruct IHA1; destruct IHA2; eauto;
+      try solve [ right; intros HF; inverts~ HF ].
+  - destruct IHA1; destruct IHA2; eauto;
+      try solve [ right; intros HF; inverts~ HF ].
+Qed.
+
 #[export]
 Hint Resolve toplike_super_top : core.
 
+(* subtyping *)
 Lemma sub_inversion_arrow : forall A1 A2 B1 B2,
     sub (t_arrow A1 A2) (t_arrow B1 B2) -> topLike B2 \/ (sub B1 A1 /\ sub A2 B2).
 Proof.
@@ -54,7 +74,6 @@ Proof.
   inverts* H.
   - inverts* H0.
 Qed.
-
 
 Lemma sub_inversion_arrow_r : forall A1 A2 B1 B2,
     sub (t_arrow A1 A2) (t_arrow B1 B2) -> sub A2 B2.
@@ -76,15 +95,6 @@ Proof.
   intros.
   inverts* H.
 Qed.
-
-
-Lemma toplike_sub: forall A B,
-    topLike A -> sub A B -> topLike B.
-Proof.
-  introv TL S.
-  induction S; inverts* TL.
-Qed.
-
 
 Lemma sub_reflexivity : forall A,
     sub A A.
@@ -146,19 +156,6 @@ Ltac auto_sub :=
       | [ H1: sub ?A ?B, H2: sub ?B ?C |- sub ?A ?C ] => forwards*: sub_transtivity H1 H2
     | |- _ => try constructor*
       end.
-
-
-Lemma toplike_decidable : forall A,
-    topLike A \/ ~topLike A.
-Proof.
-  intros.
-  induction~ A;
-    try solve [ right; intros HF; inverts~ HF ].
-  - destruct IHA1; destruct IHA2; eauto;
-      try solve [ right; intros HF; inverts~ HF ].
-  - destruct IHA1; destruct IHA2; eauto;
-      try solve [ right; intros HF; inverts~ HF ].
-Qed.
 
 
 (* disjoint *)
@@ -264,7 +261,7 @@ Proof.
 Qed.
 
 
-(* Runtime Subtype *)
+(* Runtime Subtyping *)
 Lemma subsub2sub : forall A B,
     subsub A B -> sub A B.
 Proof.
@@ -296,7 +293,7 @@ Proof.
 Qed.
 
 
-Lemma disjoint_subsub2: forall A1 A2 B,
+Lemma disjoint_subsub: forall A1 A2 B,
     subsub A1 A2 -> (disjoint A1 B <-> disjoint A2 B).
 Proof.
   intros A1 A2 B H. gen B.
@@ -328,7 +325,7 @@ Proof.
   intros x A B H H0.
   apply disjoint_eqv.
   apply disjoint_eqv in H0.
-  forwards*: disjoint_subsub2 H.
+  forwards*: disjoint_subsub H.
 Qed.
 
 Lemma subsub_disjointSpec_r : forall x A B,
@@ -339,6 +336,7 @@ Proof.
   apply disjointSpec_symmetric in H0.
   forwards*: subsub_disjointSpec_l H.
 Qed.
+
 
 (* Applicative Distributivity: convert a type to an arrow Type *)
 Lemma arrTyp_subsub: forall A B C C',
