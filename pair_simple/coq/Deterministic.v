@@ -79,9 +79,9 @@ Proof.
     inverts* Red2. inverts H0.
   - (* topProjr *)
     inverts* Red2. inverts H0.
-  - Case "beta3".
+  - (* beta *)
     inverts* Red2.
-    + SCase "beta3".
+    + (* beta *)
       inverts* Typ. inverts H2.
       inverts H11.
       * (* arrow *)
@@ -92,99 +92,99 @@ Proof.
         lets* (?&?): Typing_chk2inf H12. (* Typing condition for the following assert *)
         assert (v' = v'0) by forwards*: TypedReduce_unique H1 H9.
         congruence.
-    + SCase "app1".
+    + (* app1 *)
       inverts* H6.
-    + SCase "app2".
+    + (* app2 *)
       forwards*: step_not_value H6.
-  - Case "annov".
+  - (* annov *)
     inverts* Red2.
-    + SCase "annov".
+    + (* annov *)
       forwards*: TypedReduce_unique H0 H5.
       inverts* Typ. inverts* H1.
       lets* (?&?): Typing_chk2inf H7.
-    + SCase "anno".
+    + (* anno *)
       forwards*: step_not_value H4.
-  - Case "appl".
+  - (* appl *)
     inverts* Red2.
-    + SCase "top".
+    + (* top *)
       forwards*: step_not_value Red1.
-    + SCase "absv".
+    + (* absv *)
       forwards*: step_not_value Red1.
-    + SCase "appl".
+    + (* appl *)
       inverts* Typ. inverts H0.
       forwards*: IHRed1. subst~.
-    + SCase "appr".
+    + (* appr *)
       forwards*: step_not_value Red1.
-  - Case "appr".
+  - (* appr *)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "appl".
+    + (* appl *)
       forwards*: step_not_value H4.
-    + SCase "appr".
+    + (* appr *)
       inverts* Typ. inverts H0.
       forwards*: IHRed1.
       congruence.
-  - Case "mergel".
+  - (* mergel *)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "mergel".
+    + (* mergel *)
       inverts* Typ; inverts H0;
         forwards*: IHRed1;
         congruence.
-  - Case "merger".
+  - (* merger *)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "mergel".
+    + (* mergel *)
       forwards*: step_not_value H4.
-    + SCase "merger".
+    + (* merger *)
       inverts* Typ; inverts H0;
         forwards*: IHRed1;
         congruence.
-  - Case "pairl".
+  - (* pairl *)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "pairl".
+    + (* pairl *)
       inverts* Typ; inverts H0;
         forwards*: IHRed1;
         congruence.
-  - Case "pairr".
+  - (* pairr *)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "pairl".
+    + (* pairl *)
       forwards*: step_not_value H4.
-    + SCase "pairr".
+    + (* pairr *)
       inverts* Typ; inverts H0;
         forwards*: IHRed1;
         congruence.
-  - Case "projl".
+  - (* projl *)
     inverts* Red2.
-    + SCase "top".
+    + (* top *)
       forwards*: step_not_value Red1.
-    + SCase "projl".
+    + (* projl *)
       inverts Typ. inverts H.
       forwards*: IHRed1. subst~.
-    + SCase "projlv".
+    + (* projlv *)
       forwards*: step_not_value Red1.
-  - Case "projlv".
+  - (* projlv *)
     inverts Typ. inverts~ Red2.
     forwards*: step_not_value H4.
-  - Case "projr".
+  - (* projr *)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "merger".
+    + (* merger *)
       inverts* Typ. inverts H.
       forwards*: IHRed1.
       congruence.
-  - Case "projrv".
+  - (* projrv *)
     inverts Typ. inverts~ Red2.
     forwards*: step_not_value H4.
-  - Case "anno".
+  - (* anno *)
     inverts* Red2;
       inverts* Typ; inverts H;
       try solve [inverts* Red1];
       try solve [lets*: step_not_value Red1].
     forwards*: IHRed1.
     congruence.
-  - Case "fix".
+  - (* fix *)
     inverts* Red2.
 Qed.

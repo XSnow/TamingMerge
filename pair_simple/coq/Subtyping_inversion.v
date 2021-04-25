@@ -72,7 +72,6 @@ Proof.
       try solve [ right; intros HF; inverts~ HF ].
 Qed.
 
-
 #[export]
 Hint Resolve toplike_super_top : core.
 

@@ -12,7 +12,7 @@ Require Import
         rules_inf2
         dunfield.
 
-Require Import Omega.
+Require Import Lia.
 
 Lemma open_dexp_eqn_aux :
                 forall ee1 ee2 x n,
@@ -25,7 +25,7 @@ Proof.
   apply_mutual_ind dexp_mutind;
   default_simp;
   try solve [eapply_first_hyp; eauto].
-  omega.
+  lia.
 Qed.
 
 Lemma open_dexp_eqn : forall x ee1 ee2,
@@ -55,9 +55,7 @@ Proof.
   (* H: icfpDisjointAx A B *)
   induction~ H.
   (* symm case *)
-  apply disjoint_eqv.
   applys~ disjoint_symmetric.
-  apply~ disjoint_eqv.
 Qed.
 
 
@@ -68,12 +66,4 @@ Theorem typing_completeness : forall G ee dir A e,
 Proof.
   intros G ee dir A e Typ.
   induction* Typ.
-  - (* abs *)
-    eapply Typ_sub. eapply Typ_abs.
-    intros. applys* H1 H2.
-    apply sub_reflexivity.
-  - (* fixpoint *)
-    eapply Typ_sub. eapply Typ_fix.
-    intros. applys* H1 H2.
-    apply sub_reflexivity.
 Qed.
