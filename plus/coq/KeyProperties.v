@@ -1,10 +1,10 @@
 Require Import LibTactics.
 Require Import Metalib.Metatheory.
-Require Import syntax_ott
-        rules_inf
+Require Export syntax_ott.
+Require Import
         Infrastructure
-        Subtyping_inversion
-        Disjoint_n_toplike.
+        SubtypingInversion
+        Disjointness.
 
 
 Create HintDb common.

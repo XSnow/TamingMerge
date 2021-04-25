@@ -5,11 +5,12 @@ Require Import
         syntax_ott
         rules_inf
         Infrastructure
-        Key_Properties
-        Subtyping_inversion
-        Disjoint_n_toplike
+        KeyProperties
+        SubtypingInversion
+        Disjointness
         Deterministic
         Progress.
+
 Require Import Arith Lia.
 
 

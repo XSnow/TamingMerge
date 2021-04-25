@@ -1,8 +1,9 @@
 Require Import LibTactics.
 Require Import Metalib.Metatheory.
-Require Import syntax_ott
+Require Export syntax_ott.
+Require Import
         rules_inf
-        Subtyping_inversion.
+        SubtypingInversion.
 
 
 (* topLike *)

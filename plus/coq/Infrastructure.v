@@ -1,9 +1,10 @@
 Require Import LibTactics.
 Require Import Metalib.Metatheory.
-Require Import syntax_ott
-               rules_inf
-               Subtyping_inversion
-               Disjoint_n_toplike.
+Require Export syntax_ott.
+Require Import
+        rules_inf
+        SubtypingInversion
+        Disjointness.
 
 Require Import List. Import ListNotations.
 

@@ -1,13 +1,12 @@
 Require Import LibTactics.
 Require Import Metalib.Metatheory.
-Require Import Logic. Import Decidable.
+Require Export syntax_ott.
 Require Import
-        syntax_ott
         rules_inf
         Infrastructure
-        Disjoint_n_toplike
-        Subtyping_inversion
-        Key_Properties.
+        Disjointness
+        SubtypingInversion
+        KeyProperties.
 
 Require Import Arith Lia.
 

@@ -49,7 +49,7 @@ $(COQMKFILENAME): Makefile $(SYNTAX)_ott.v $(TARGET)_inf.v
 
 
 coqclean:
-	rm -f .*.d *.conf .*.aux *.v-e *.v.d *.vo *.vok *.vos *.glob $(VOFILES) $(COQMKFILENAME)
+	rm -f .*.d *.conf .*.aux *.v-e *.v.d *.vo *.vok *.vos *.glob $(COQMKFILENAME)
 
 ottclean:
 	rm -f $(SYNTAX)_ott.v $(TARGET)_inf.v
