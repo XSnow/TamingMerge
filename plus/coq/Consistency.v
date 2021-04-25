@@ -10,10 +10,10 @@ Require Import
         Disjoint_n_toplike
         Deterministic
         Progress.
-Require Import Arith Omega.
+Require Import Arith Lia.
 
 
-
+#[export]
 Hint Extern 0 => match goal with
                    | [ H1: ~topLike ?A, H2: topLike (t_rcd _ ?A) |- _ ] => (exfalso; apply H1; inverts H2)
                  end : falseHd.
@@ -87,7 +87,7 @@ Qed.
 
 
 Lemma disjoint_or_exists: forall A B,
-    disjoint A B \/ exists C, ord C /\ sub A C /\ sub B C /\ ~ topLike C.
+    disjoint A B \/ exists C, ord C /\ algo_sub A C /\ algo_sub B C /\ ~ topLike C.
 Proof with solve_false.
   intros A B. gen B.
   induction A; intros; auto.
@@ -133,8 +133,8 @@ Proof.
   inverts keep Typ1. inverts keep Typ2.
   lets~ [?|(?&?&?&?&?)]: disjoint_or_exists B1 B2.
   right.
-  assert (S1: sub (t_arrow A1 B1) (t_arrow (t_and A1 A2) x)) by auto_sub.
-  assert (S2: sub (t_arrow A2 B2) (t_arrow (t_and A1 A2) x)) by auto_sub.
+  assert (S1: algo_sub (t_arrow A1 B1) (t_arrow (t_and A1 A2) x)) by auto_sub.
+  assert (S2: algo_sub (t_arrow A2 B2) (t_arrow (t_and A1 A2) x)) by auto_sub.
   forwards~ T1: Typ_sub Typ1 S1.
   forwards~ T2: Typ_sub Typ2 S2.
   forwards* (?&R1) : TypedReduce_progress T1.
@@ -169,7 +169,7 @@ Theorem consistent_complete: forall v1 v2 A B,
     value v1 -> value v2 ->
     Typing nil v1 Inf A -> Typing nil v2 Inf B ->
     consistencySpec v1 v2 -> consistent v1 v2.
-Proof with (simpl; try omega; auto).
+Proof with (simpl; try lia; auto).
   intros v1 v2 A B Val1 Val2 Typ1 Typ2 Cons. gen Val1 Val2 Cons A B.
   indExpSize (size_exp v1 + size_exp v2);
   inverts Val1 as V1_1 V1_2; inverts Val2 as V2_1 V2_2; simpl in SizeInd;
@@ -178,13 +178,13 @@ Proof with (simpl; try omega; auto).
             match goal with
             | |- consistent (e_merge _ _) _ =>
               ( lets~ (C1&C2): consistencySpec_mergel Cons;
-                forwards*: IH C1; simpl; try omega; auto;
-                try forwards*: IH C2; simpl; try omega; auto
+                forwards*: IH C1; simpl; try lia; auto;
+                try forwards*: IH C2; simpl; try lia; auto
               )
             | |- consistent _ (e_merge _ _) =>
               ( lets~ (C1&C2): consistencySpec_merger Cons;
-                forwards*: IH C1; simpl; try omega; auto;
-                try forwards*: IH C2; simpl; try omega; auto
+                forwards*: IH C1; simpl; try lia; auto;
+                try forwards*: IH C2; simpl; try lia; auto
               )
             | _ =>
               ( applys C_disjoint; constructor* )
@@ -231,4 +231,5 @@ Proof.
     applys* C_disjoint Dis. eauto.
 Qed.
 
+#[export]
 Hint Immediate consistent_rcd_inv : core.

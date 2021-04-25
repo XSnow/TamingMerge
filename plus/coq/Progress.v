@@ -10,12 +10,9 @@ Require Import
         Disjoint_n_toplike.
 
 Require Import List. Import ListNotations.
-Require Import Arith Omega.
-Require Import Strings.String.
+Require Import Arith Lia.
 
 
-
-(* to adjust the subtyping rules can make it easier*)
 Lemma TypedReduce_progress: forall v A,
     value v -> Typing [] v Chk A -> exists v', TypedReduce v A v'.
 Proof with eauto.
@@ -57,14 +54,14 @@ Proof with eauto.
     forwards* (?&?): TypedReduce_progress Val2.
   - inverts Typ.
     inverts H1; inverts H3...
-    + assert (sub (t_and A2 B2) A2) by auto_sub.
-      assert (sub (t_and A2 B2) B2) by auto_sub.
+    + assert (algo_sub (t_and A2 B2) A2) by auto_sub.
+      assert (algo_sub (t_and A2 B2) B2) by auto_sub.
       forwards*: Typ_app v1 v2.
       forwards*: Typ_app v0 v2.
       forwards* (?&?): IHVal1_1.
       forwards* (?&?): IHVal1_2.
-    + assert (sub (t_and A2 B2) A2) by auto_sub.
-      assert (sub (t_and A2 B2) B2) by auto_sub.
+    + assert (algo_sub (t_and A2 B2) A2) by auto_sub.
+      assert (algo_sub (t_and A2 B2) B2) by auto_sub.
       forwards*: Typ_app v1 v2.
       forwards*: Typ_app v0 v2.
       forwards* (?&?): IHVal1_1.
@@ -106,9 +103,9 @@ Proof with auto.
     auto;
     try solve [left; auto];
     try solve [right; auto].
-  - Case "var".
+  - (* var *)
     invert H0.
-  - Case "app".
+  - (* app *)
     inverts Lc.
     right.
     destruct~ IHTyp1 as [Val1 | [e1' Red1]].
@@ -117,43 +114,43 @@ Proof with auto.
       forwards* (?&?): papp_progress Val1 Val2.
     + exists*.
     + exists*.
-  - Case "proj".
+  - (* proj *)
     inverts Lc.
     right.
     destruct~ IHTyp as [Val1 | [e1' Red1]].
     + forwards* (?&?): papp_progress2 Val1.
     + exists*.
-  - Case "rcd".
+  - (* rcd *)
     inverts Lc.
     destruct~ IHTyp as [ Val1 | [t1' Red1]]. right*.
-  - Case "merge".
+  - (* merge *)
     inverts Lc.
     destruct~ IHTyp1 as [ Val1 | [t1' Red1]];
       destruct~ IHTyp2 as [ Val2 | [t2' Red2]];
       subst.
-    + SCase "e_merge v1 e2".
+    + (* e_merge v1 e2 *)
       inverts* Typ1.
-    + SCase "e_merge e1 v2".
+    + (* e_merge e1 v2 *)
       inverts* Typ2.
-    + SCase "e_merge e1 e2".
+    + (* e_merge e1 e2 *)
       inverts* Typ2.
-  - Case "anno".
+  - (* anno *)
     right.
     destruct~ IHTyp as [ Val | [t' Red]].
-    + SCase "e_anno v A".
+    + (* e_anno v A *)
       lets* (v1' & Tyr) : TypedReduce_progress Val Typ.
-    + SCase "e_anno e A".
+    + (* e_anno e A *)
       forwards*: Step_anno Red.
-  - Case "fixpoint".
+  - (* fixpoint *)
     right. eauto.
-  - Case "mergev".
+  - (* mergev *)
     destruct~ IHTyp1 as [ Val1 | [t1' Red1]];
       destruct~ IHTyp2 as [ Val2 | [t2' Red2]];
       subst.
-    + SCase "e_merge v1 e2".
+    + (* e_merge v1 e2 *)
       inverts* Typ1.
-    + SCase "e_merge e1 v2".
+    + (* e_merge e1 v2 *)
       inverts* Typ2.
-    + SCase "e_merge e1 e2".
+    + (* e_merge e1 e2 *)
       inverts* Typ2.
 Qed.

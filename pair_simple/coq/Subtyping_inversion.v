@@ -125,8 +125,8 @@ Qed.
 #[export]
 Hint Resolve sub_reflexivity : core.
 
-Lemma sub_transtivity : forall B A,
-      sub A B -> forall C, sub B C -> sub A C.
+Lemma sub_transtivity : forall A B C,
+    sub A B -> sub B C -> sub A C.
 Proof with eauto.
   introv S1 S2. gen A C.
   induction B; intros;

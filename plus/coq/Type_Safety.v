@@ -13,11 +13,10 @@ Require Import
         Consistency.
 
 Require Import List. Import ListNotations.
-Require Import Arith Omega.
-Require Import Strings.String.
+Require Import Arith Lia.
 
 
-(* requires sub Top A -> toplike A *)
+(* requires algo_sub Top A -> toplike A *)
 Lemma TypedReduce_trans : forall v v1 v2 A B,
     value v -> TypedReduce v A v1 -> TypedReduce v1 B v2 -> TypedReduce v B v2.
 Proof with eauto.
@@ -42,17 +41,17 @@ Proof with eauto.
   introv Val Red Typ. (* '. forwards* (B&Typ&Sub): Typing_chk2inf Typ'. *)
   gen B. lets Red': Red.
   induction Red; intros; try solve [jauto].
-  - Case "absv".
+  - (* absv *)
     simpl. exists. splits*.
     inverts Typ. applys Typ_abs. intros. apply~ Typing_chk_sub.
-  - Case "rcd".
+  - (* rcd *)
     inverts Val. inverts Typ; forwards* (?&?&?&?): IHRed.
     exists* (t_rcd l x).
-  - Case "mergel".
+  - (* mergel *)
     inverts Val. inverts Typ; forwards*: IHRed.
-  - Case "merger".
+  - (* merger *)
     inverts Val. inverts Typ; forwards*: IHRed.
-  - Case "merge_and".
+  - (* merge_and *)
     forwards (?&?&?&?): IHRed1 Val Red1 Typ.
     forwards (?&?&?&?): IHRed2 Val Red2 Typ.
     lets Con: consistent_afterTR Val Typ Red1 Red2.
@@ -139,8 +138,8 @@ Proof with eauto.
     forwards* (T & Htyp & Hsub): Typing_chk2inf Typ3.
     inverts Val1.
     inverts Typ1; inverts Typ2;
-      assert (sub (t_and A2 B2) A2) by auto_sub;
-      assert (sub (t_and A2 B2) B2) by auto_sub;
+      assert (algo_sub (t_and A2 B2) A2) by auto_sub;
+      assert (algo_sub (t_and A2 B2) B2) by auto_sub;
       forwards~: IHP1 v2; [ applys* Typ_app H7 | auto | applys* Typ_app H8 | auto ];
       forwards~: IHP2 v2; [ applys* Typ_app H9 | auto | applys* Typ_app H10 | auto ].
     + apply~ Typ_merge. applys* arrTyp_arr_disjoint H6.
@@ -173,6 +172,7 @@ Inductive step_or_v : exp -> exp -> Prop :=
 | ST_v : forall v, value v -> step_or_v v v
 | ST_s : forall e1 e2, step e1 e2 -> step_or_v e1 e2.
 
+#[export]
 Hint Constructors step_or_v : core.
 
 (* to prove the consistent merge case in preservation_subsub *)
@@ -182,7 +182,7 @@ Lemma consistent_steps: forall e1 e2 e1' e2' A B,
     (forall (e e' : exp) (A : typ),
          size_exp e < (size_exp e1 + size_exp e2) -> Typing [] e Inf A -> step e e' -> exists C, [] ⊢ e' ⇒ C /\ subsub C A) ->
     consistent e1' e2'.
-Proof with (simpl; omega).
+Proof with (simpl; lia).
   introv Typ1 Typ2 ST1 ST2 Cons IH. gen e1' e2' A B.
   induction Cons; intros; try solve [inverts ST1; inverts ST2; solve_false; eauto].
     + (* e:A ~ e:B *)
@@ -197,42 +197,42 @@ Proof with (simpl; omega).
         inverts ST1' as Hv1 Hs1; inverts ST2' as Hv2 Hs2; solve_false.
       * (* value VS step *)
         applys C_rcd. applys* IHCons. intros.
-        forwards* (?&?&?): IH H3. simpl. omega.
+        forwards* (?&?&?): IH H3...
       * (* step VS value *)
         applys C_rcd. applys* IHCons. intros.
-        forwards* (?&?&?): IH H3. simpl. omega.
+        forwards* (?&?&?): IH H3...
       * (* step VS step *)
         applys C_rcd. applys* IHCons. intros.
-        forwards* (?&?&?): IH H3. simpl. omega.
+        forwards* (?&?&?): IH H3...
     + (* disjoint *)
       inverts ST1 as ST1'; [unify_pType e1' | unify_pType u1];
         inverts ST2 as ST2'; try unify_pType e2'; try unify_pType u2.
       * (* value VS value *)
         applys* C_disjoint.
       * (* value VS step *)
-        forwards* (?&?&?): IH u2. assert (size_exp e1' >0) by eomg. omega.
+        forwards* (?&?&?): IH u2. assert (size_exp e1' >0) by eomg...
         forwards~: step_prv_prevalue ST2'. unify_pType e2'.
         applys* C_disjoint.
       * (* step VS value *)
-        forwards* (?&?&?): IH u1. assert (size_exp e2' >0) by eomg. omega.
+        forwards* (?&?&?): IH u1. assert (size_exp e2' >0) by eomg. lia.
         forwards~: step_prv_prevalue ST1'. unify_pType e1'.
         applys* C_disjoint.
       * (* step VS step *)
-        forwards* (?&?&?): IH u1. assert (size_exp u2 >0) by eomg. omega.
-        forwards* (?&?&?): IH u2. assert (size_exp u1 >0) by eomg. omega.
+        forwards* (?&?&?): IH u1. assert (size_exp u2 >0) by eomg. lia.
+        forwards* (?&?&?): IH u2. assert (size_exp u1 >0) by eomg. lia.
         forwards~: step_prv_prevalue ST1'. unify_pType e1'.
         forwards~: step_prv_prevalue ST2'. unify_pType e2'.
         applys* C_disjoint.
     + (* merge on left *)
       inverts ST1 as ST1'; [ | inverts ST1' as ST1_1 ST1_2 ]; inverts Typ1;
         try solve [
-              forwards*: IHCons1; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; omega);
-              forwards*: IHCons2; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; omega)].
+              forwards*: IHCons1; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; lia);
+              forwards*: IHCons2; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; lia)].
     + (* merge on right *)
       inverts ST2 as ST2'; [ | inverts ST2' as ST2_1 ST2_2 ]; inverts Typ2;
         try solve [
-              forwards*: IHCons1; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; omega);
-              forwards*: IHCons2; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; omega)].
+              forwards*: IHCons1; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; lia);
+              forwards*: IHCons2; try introv p1 p2 p3; try applys~ IH p2 p3; try (simpl; lia)].
 Qed.
 
 Ltac indExpDirSize s :=
@@ -255,54 +255,55 @@ Theorem preservation_subsub : forall e e' dir A,
     Typing nil e dir A ->
     step e e' ->
     exists C, Typing nil e' dir C /\ subsub C A.
-Proof with (simpl; try omega; auto; try eassumption; auto).
+Proof with (simpl; try lia; auto; try eassumption; auto).
   introv Typ J. gen A e'.
   indExpDirSize ((size_exp e) + (size_dir dir)).
   inverts keep Typ as Ht1 Ht2 Ht3 Ht4;
     try solve [inverts J]; repeat simpl in SizeInd.
-  - Case "typing_app".
+  - (* typing_app *)
     inverts J as J1 J2 J3; try forwards* (?&?&S2): IH J2; assert (size_exp e1 >0) by eomg; eomg.
     + forwards*: papp_preservation J3.
     + lets* ( ?&? & Harr & Hsub ): arrTyp_arr_subsub Ht2 S2.
     forwards* (?&?): subsub_arr_inv Hsub.
     + exists. split*. applys* Typ_app Ht2. applys* Typing_chk_sub.
-  - Case "typing_proj".
+  - (* typing_proj *)
     inverts J as J1 J2 J3; try forwards* (?&?&S2): IH J1; eomg.
     + forwards*: papp_preservation2 J2.
     + lets* ( ? & Harr & Hsub ): arrTyp_rcd_subsub Ht2 S2.
       forwards* (?&?): subsub_rcd_inv Hsub.
-  - Case "typing_rcd".
+  - (* typing_rcd *)
     (* disjoint *)
     inverts J as J1 J2 J3;
     try forwards* (?&?&?): IH J1; eomg;
     try forwards* (?&?&?): IH J2; eomg.
-  - Case "typing_merge".
+  - (* typing_merge *)
     (* disjoint *)
     inverts J as J1 J2 J3;
     try forwards* (?&?&?): IH J1; eomg;
     try forwards* (?&?&?): IH J2; eomg.
-  - Case "typing_anno".
+  - (* typing_anno *)
     inverts Ht1. inverts J as J1 J2 J3.
     + lets* (?&?): TypedReduce_preservation J2.
     + forwards* (?&?&?): IH J1...
       exists A. split*. apply subsub2sub in H2.
-      assert (sub x A) by auto_sub. lets*: Typ_sub.
-  - Case "typing_fix".
+      assert (algo_sub x A) by auto_sub. lets*: Typ_sub.
+  - (* typing_fix *)
     inverts J as Lc. pick_fresh x.
     rewrite* (@subst_exp_intro x).
     forwards~ Typ_chk: Ht1.
     rewrite_env(nil++[(x,A)]++nil) in Typ_chk.
     lets~ (?&?&?): Typing_subst_2 Typ_chk Typ.
     apply subsub2sub in H0. forwards*: Typing_chk_sub H H0.
-  - Case "typing_mergev". (* consistent merge *)
+  - (* typing_mergev *) (* consistent merge *)
     inverts J as J1 J2 J3; forwards*: consistent_steps Ht4;
       (* consistent e1' e2' *)
       try introv p1 p2 p3; try forwards* (?&?&?): IH p2 p3; eomg;
         (* typing for the two terms *)
         try forwards* (?&?&?): IH J1; eomg; try forwards* (?&?&?): IH J2; eomg.
-  - Case "subsumption".
+  - (* subsumption *)
     forwards* (?&?&?): IH J...
-    apply subsub2sub in H0. assert (sub x A) by auto_sub.
+    apply subsub2sub in H0.
+    assert (algo_sub x A) by auto_sub.
     exists* A.
 Qed.
 

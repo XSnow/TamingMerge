@@ -30,7 +30,7 @@ Qed.
 
 
 Lemma toplike_sub: forall A B,
-    topLike A -> sub A B -> topLike B.
+    topLike A -> algo_sub A B -> topLike B.
 Proof.
   intros A B H H0.
   apply topLike_super_top in H.
@@ -53,10 +53,10 @@ Qed.
 
 (* disjoint *)
 Definition disjointSpec A B :=
-  forall C, sub A C -> sub B C -> topLike C.
+  forall C, algo_sub A C -> algo_sub B C -> topLike C.
 
 
-Hint Constructors disjoint : core.
+#[export] Hint Constructors disjoint : core.
 
 Lemma disjoint_andl: forall A1 A2 B,
     disjoint (t_and A1 A2) B -> disjoint A1 B /\ disjoint A2 B.
@@ -83,7 +83,7 @@ Proof.
   inverts* H.
 Qed.
 
-Hint Immediate disjoint_rcd : core.
+#[export] Hint Immediate disjoint_rcd : core.
 
 
 Lemma disjoint_completeness: forall A B,
@@ -170,7 +170,7 @@ Proof with auto .
   split; apply disjoint_eqv; unfolds; intros T S1 S2.
   - destruct HS...
     + apply~ HD.
-      assert (sub (t_arrow A0 B) (t_arrow A0 C)). {
+      assert (algo_sub (t_arrow A0 B) (t_arrow A0 C)). {
         apply~ sub_fun.
         eauto.
       }
@@ -179,7 +179,7 @@ Proof with auto .
       applys trans S1. apply~ sub_rcd. auto_sub.
   - destruct HS...
     + apply~ HD.
-      assert (sub (t_arrow A0 B) (t_arrow A0 D)). {
+      assert (algo_sub (t_arrow A0 B) (t_arrow A0 D)). {
         apply~ sub_fun.
         eauto.
       }
@@ -199,7 +199,7 @@ Proof.
   apply~ H.
 Qed.
 
-Hint Immediate disjoint_symm : core.
+#[export] Hint Immediate disjoint_symm : core.
 
 
 Lemma disjoint_splitr: forall A B C D,
@@ -212,13 +212,13 @@ Proof.
 Qed.
 
 Lemma disjoint_sub: forall A A' B,
-    disjoint A B -> sub A A' -> disjoint A' B.
+    disjoint A B -> algo_sub A A' -> disjoint A' B.
 Proof.
   intros A A' B H H0.
   apply disjoint_eqv in H.
   apply disjoint_eqv.
   unfolds. intros.
-  assert (sub A C) by auto_sub.
+  assert (algo_sub A C) by auto_sub.
   apply~ H.
 Qed.
 
@@ -271,30 +271,27 @@ Qed.
 
 (* subsub *)
 Lemma subsub2sub : forall A B,
-    subsub A B -> sub A B.
+    subsub A B -> algo_sub A B.
 Proof with eauto .
   intros A B H.
   induction H...
   - apply split_sub in H. destruct H.
     apply split_sub in H0. destruct H0.
-    assert (sub (t_and A1 A2) (t_and B1 B2))...
+    assert (algo_sub (t_and A1 A2) (t_and B1 B2))...
     applys trans...
 Qed.
 
-Hint Immediate subsub2sub : core.
-Hint Constructors subsub : core.
+#[export] Hint Immediate subsub2sub : core.
+#[export] Hint Constructors subsub : core.
 
 Lemma subsub_refl : forall A,
     subsub A A.
 Proof.
   intros A.
-  induction (decideR A).
-  - auto.
-  - forwards*: SubSub_split.
-    Unshelve. eauto. eauto.
+  induction A; auto.
 Qed.
 
-Hint Resolve subsub_refl : core.
+#[export] Hint Resolve subsub_refl : core.
 
 Lemma split_subsub : forall A B C A',
     spl A B C -> subsub A A' ->
@@ -375,7 +372,7 @@ Proof.
 Qed.
 
 Lemma subsub_arr_inv : forall A B C D,
-    subsub (t_arrow A B) (t_arrow C D) -> sub C A /\ subsub B D.
+    subsub (t_arrow A B) (t_arrow C D) -> algo_sub C A /\ subsub B D.
 Proof.
   introv Hsub.
   inductions Hsub; eauto.
@@ -403,7 +400,7 @@ Proof.
   - forwards* (?&?): IHHs H4.
 Qed.
 
-Hint Immediate subsub_disjoint_l subsub_disjoint_r subsub_disjoint : core.
+#[export] Hint Immediate subsub_disjoint_l subsub_disjoint_r subsub_disjoint : core.
 
 Lemma subsub_split : forall A A1 A2 B,
     subsub A B -> spl A A1 A2 -> exists B1 B2, spl B B1 B2.
@@ -504,21 +501,21 @@ Proof with (auto; solve_false).
 Qed.
 
 Lemma sub_andl : forall A B,
-    sub (t_and A B) A.
+    algo_sub (t_and A B) A.
 Proof.
   intros. auto_sub.
 Qed.
 
 Lemma sub_andr : forall A B,
-    sub (t_and A B) B.
+    algo_sub (t_and A B) B.
 Proof.
   intros. auto_sub.
 Qed.
 
-Hint Resolve sub_andl sub_andr : core.
+#[export] Hint Resolve sub_andl sub_andr : core.
 
-(* convert to arrow Type *)
-Hint Constructors arrTyp topLike ord spl: core.
+(* Applicative Distributivity: convert to arrow Type *)
+#[export] Hint Constructors arrTyp topLike ord spl: core.
 
 Lemma arrTyp_split: forall A A1 A2 B,
     arrTyp A B -> spl A A1 A2 ->
@@ -527,21 +524,6 @@ Proof.
   introv Harr Hspl. gen B.
   induction Hspl; intros; inverts Harr; try solve [exists; repeat split*].
 Qed.
-
-(* spl (A->B)&(C->D) ... ...  exists ?, spl ? (A->B) (C->D) /\ arrTyp (A->B)&(C->D) ?
-Lemma arrTyp_split_rev: forall A A1 A2 C1 C2 D1 D2,
-    spl A A1 A2 -> arrTyp A1 (t_arrow C1 D1) -> arrTyp A2 (t_arrow C2 D2)
-    -> exists B, arrTyp A B /\ subsub B (t_and (t_arrow C1 D1) (t_arrow C2 D2)).
-Proof.
-  introv Hspl Harr1 Harr2. gen C1 C2.
-  induction Hspl; intros.
-  - exists; repeat split*.
-Admitted.
-  introv Hsp AT1 AT2. gen A1 A2 B1 B2.
-  induction A; intros; auto; solve_false.
-  - inverts Hsp. inverts AT1. inverts* AT2.
-  - inverts* Hsp. exists* (t_and B1 B2). split*. eauto
-  - exists A. inverts Hsp. inverts appsB. inverts* appsC. *)
 
 (* A1 -> A2 & B1 -> B2 <<: C1 -> C2 & D1 -> D2
    A1&B2 -> B1&B2 <<: A1 -> B1&B2 *)

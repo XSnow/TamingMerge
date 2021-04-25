@@ -9,8 +9,7 @@ Require Import
         Subtyping_inversion
         Key_Properties.
 
-Require Import Coq.Strings.String.
-Require Import Arith Omega.
+Require Import Arith Lia.
 
 
 Lemma TypedReduce_disjoint_unique: forall (v1 v2 v1' v2': exp) (A A' B B' C: typ),
@@ -36,25 +35,25 @@ Lemma TypedReduce_unique: forall (v1 v2 v1' v2': exp) (A B C: typ),
     Typing nil v1 Inf A -> Typing nil v2 Inf B ->
     TypedReduce v1 C v1' -> TypedReduce v2 C v2' ->
     consistent v1 v2 -> v1' = v2'.
-Proof with (omega; auto).
+Proof with (lia; auto).
   intros v1 v2 v1' v2' A B C Val1 Val2 Typ1 Typ2 R1 R2 Cons.
   gen A B v1 v2 v1' v2'. indTypSize (size_typ C).
-  destructT C.
+  lets [?|(?&?&?)]: ord_or_split C.
   - (* ord *)
     gen A B. induction Cons; intros;
       try solve [
               inverts keep R1;
-              try solve [forwards~: TypedReduce_toplike R1 R2];
+              try solve [forwards: TypedReduce_toplike R1 R2; try eassumption; auto 4];
               inverts keep R2;
-              try solve [forwards~: TypedReduce_toplike R1 R2];
-              solve_false; auto].
+              try solve [forwards~: TypedReduce_toplike R1 R2; try eassumption; auto 4];
+              solve_false; auto 4].
     + (* rcd *)
       inverts Val1. inverts Typ1.
       inverts Val2. inverts Typ2.
       inverts keep R1; try solve [forwards~: TypedReduce_toplike R1 R2];
         inverts keep R2; try solve [forwards~: TypedReduce_toplike R1 R2];
           solve_false; auto.
-      simpl in SizeInd. forwards*: IH H10 H13. omega. congruence.
+      simpl in SizeInd. forwards*: IH H10 H13. lia. congruence.
     + (* disjoint *)
       forwards*: principal_type_checks u1. forwards*: principal_type_checks u2.
       subst.
@@ -77,10 +76,10 @@ Proof with (omega; auto).
     inverts keep R2; try solve [forwards*: TypedReduce_toplike R1 R2]; solve_false; auto.
     split_unify.
     assert (HS: forall A B C, spl A B C -> size_typ B < size_typ A /\ size_typ C < size_typ A). {
-      intros. induction H0; simpl; try omega.
+      intros. induction H0; simpl; try lia.
     }
     lets* (?&?): HS H.
-    forwards*: IH H1 H4. omega. forwards*: IH H2 H5. omega.
+    forwards*: IH H1 H4. lia. forwards*: IH H2 H5. lia.
     subst*.
 Qed.
 
@@ -124,40 +123,40 @@ Proof with eauto.
   lets Red1' : Red1.
   induction Red1;
     introv Typ Red2.
-  - Case "papp".
+  - (* papp*)
     inverts* Red2.
     + forwards*: papp_unique H1 H7.
     + forwards*: step_not_value H6.
     + forwards*: step_not_value H6.
-  - Case "proj".
+  - (* proj*)
     inverts* Red2.
     + forwards*: papp_unique2 H0 H5.
     + forwards*: step_not_value H4.
-  - Case "annov".
+  - (* annov*)
     inverts* Red2.
-    + SCase "annov".
+    + (* annov*)
       inverts* Typ.
       inverts H4.
       forwards*: TypedReduce_unique H0 H5.
-    + SCase "anno".
+    + (* anno*)
       forwards*: step_not_value H4.
-  - Case "appl".
+  - (* appl*)
     inverts Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "appl".
+    + (* appl*)
       inverts Typ.
       forwards: IHRed1...
       congruence.
-  - Case "appr".
+  - (* appr*)
     inverts* Red2;
       try solve [forwards*: step_not_value Red1].
-    + SCase "appl".
+    + (* appl*)
       forwards*: step_not_value H4.
-    + SCase "appr".
+    + (* appr*)
       inverts* Typ. lets (?&?&?): Typing_chk2inf H7.
       forwards*: IHRed1.
       congruence.
-  - Case "merge".
+  - (* merge*)
     inverts Typ;
       inverts* Red2;
       try solve [forwards*: step_not_value Red1_2];
@@ -165,23 +164,23 @@ Proof with eauto.
       forwards*: IHRed1_1;
       forwards*: IHRed1_2;
       subst*.
-  - Case "mergel".
+  - (* mergel*)
     inverts* Red2;
       try solve [forwards*: step_not_value H4].
-    + SCase "mergel".
+    + (* mergel*)
       inverts* Typ;
         forwards*: IHRed1;
         congruence.
-  - Case "merger".
+  - (* merger*)
     inverts* Red2;
       try solve [forwards*: step_not_value H2].
-    + SCase "mergel".
+    + (* mergel*)
       forwards*: step_not_value H4.
-    + SCase "merger".
+    + (* merger*)
       inverts* Typ;
         forwards*: IHRed1;
         congruence.
-  - Case "anno".
+  - (* anno*)
     inverts* Red2;
       inverts* Typ;
       try solve [inverts* Red1];
@@ -189,10 +188,10 @@ Proof with eauto.
     inverts H1.
     forwards*: IHRed1.
     congruence.
-  - Case "fix".
+  - (* fix*)
     inverts* Red2.
-  - Case "rcd".
+  - (* rcd*)
     inverts* Typ. inverts* Red2. forwards*: IHRed1. congruence.
-  - Case "proj".
+  - (* proj*)
     inverts* Typ. inverts* Red2; try solve [forwards*: step_not_value Red1]. forwards*: IHRed1. congruence.
 Qed.

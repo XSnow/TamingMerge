@@ -8,13 +8,13 @@ Require Import syntax_ott
 
 
 Create HintDb common.
-Hint Extern 1 (exists _, _) => exists : common.
-Hint Extern 1 => match goal with
+#[export] Hint Extern 1 (exists _, _) => exists : common.
+#[export] Hint Extern 1 => match goal with
                    [ h : exists _ , _ |- _ ] => destruct h
                  end : common.
 
 
-Hint Extern 0 => match goal with
+#[export] Hint Extern 0 => match goal with
                    | [ H: value (e_app _ _) |- _ ] => inverts H
                    | [ H: value (e_fixpoint _ _ ) |- _ ] => inverts H
                    | [ H: prevalue (e_app _ _) |- _ ] => inverts H
@@ -48,7 +48,7 @@ Proof.
   induction Hv; intros; inverts~ Ht.
 Qed.
 
-Hint Immediate typ_value_ptype : core.
+#[export] Hint Immediate typ_value_ptype : core.
 
 Lemma typ_prevalue_ptype: forall u A,
     Typing nil u Inf A -> prevalue u -> pType u A.
@@ -57,7 +57,7 @@ Proof.
   induction Hp; intros; inverts~ Ht; inverts~ H.
 Qed.
 
-Hint Immediate typ_prevalue_ptype : core.
+#[export] Hint Immediate typ_prevalue_ptype : core.
 
 Ltac unify_pType e :=
   match goal with
@@ -96,7 +96,7 @@ Proof.
   inverts~ H.
 Qed.
 
-Hint Immediate prevalue_merge_l_inv prevalue_merge_r_inv prevalue_rcd_inv: core.
+#[export] Hint Immediate prevalue_merge_l_inv prevalue_merge_r_inv prevalue_rcd_inv: core.
 
 (* TypedReduce *)
 Lemma TypedReduce_prv_value: forall v A v',
@@ -106,7 +106,7 @@ Proof with eauto with termDb.
   induction* Red; try solve [inverts* Val]...
 Qed.
 
-Hint Immediate TypedReduce_prv_value : core.
+#[export] Hint Immediate TypedReduce_prv_value : core.
 
 Lemma TypedReduce_top_normal : forall (v v': exp),
     TypedReduce v t_top v' -> v' = e_top.
@@ -158,7 +158,7 @@ Qed.
 
 
 Lemma TypedReduce_sub: forall v v' A B,
-    value v -> TypedReduce v A v' -> pType v B -> sub B A.
+    value v -> TypedReduce v A v' -> pType v B -> algo_sub B A.
 Proof with eauto with common.
   introv Val Red Typ. gen B.
   induction Red; intros.
@@ -180,7 +180,7 @@ Qed.
 Definition consistencySpec v1 v2 :=
   forall A v1' v2', ord A -> TypedReduce v1 A v1' -> TypedReduce v2 A v2' -> v1' = v2'.
 
-Hint Unfold consistencySpec : core.
+#[export] Hint Unfold consistencySpec : core.
 
 
 Lemma consistent_symm: forall e1 e2,
@@ -190,7 +190,7 @@ Proof with eauto.
   induction H...
 Qed.
 
-Hint Resolve consistent_symm : core.
+#[export] Hint Resolve consistent_symm : core.
 
 
 Lemma consistent_refl: forall v A,
@@ -209,4 +209,4 @@ Proof with eauto.
 Qed.
 
 
-Hint Resolve consistent_refl : core.
+#[export] Hint Resolve consistent_refl : core.

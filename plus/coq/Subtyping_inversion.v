@@ -2,7 +2,41 @@ Require Import Metalib.Metatheory.
 Require Import LibTactics.
 Require Export syntax_ott.
 Require Import rules_inf.
-Require Import Omega.
+Require Import Lia.
+
+
+(* R: proper types *)
+Inductive R : typ -> Prop :=
+| R_int : R t_int
+| R_top : R t_top
+| R_ordFun : forall A B, ord B -> R A -> R B -> R (t_arrow A B)
+| R_ordRcd : forall l A, ord A -> R A -> R (t_rcd l A)
+| R_spl : forall B C A, spl A B C -> R B -> R C -> R A.
+
+#[local]
+Hint Constructors R : core.
+
+
+Lemma rfun : forall B, R B -> forall A, R A -> R (t_arrow A B).
+Proof.
+  intros B RB.
+  induction RB; intros; eauto.
+Qed.
+
+Lemma rrcd : forall A, R A-> forall l, R (t_rcd l A).
+Proof.
+  intros A RA.
+  induction RA; intros; eauto.
+Qed.
+
+Lemma types_are_proper : forall A, R A.
+Proof.
+  introv. induction* A.
+  - apply~ rfun.
+  - apply~ rrcd.
+Qed.
+
+Ltac proper_ind A := assert (r: R A) by apply (types_are_proper A); induction r.
 
 
 (* split *)
@@ -13,7 +47,9 @@ Proof.
   induction o; intros; inverts* s.
 Qed.
 
+#[export]
 Hint Resolve split_ord_false : falseHd.
+
 
 Ltac solve_false := try intro; try solve [false; eauto with falseHd].
 
@@ -27,9 +63,9 @@ Proof.
     destruct~ IHA as [?|(?&?&?)].
     right*.
 Qed.
-
+(*
 Ltac destructT A := lets [?|(?&?&?)]: (ord_or_split A).
-
+*)
 
 Lemma split_unique : forall T A1 A2 B1 B2,
     spl T A1 B1 -> spl T A2 B2 -> A1 = A2 /\ B1 = B2.
@@ -52,38 +88,6 @@ Ltac split_unify :=
   auto.
 
 
-
-(* R *)
-Inductive R : typ -> Prop :=
-| Rord : forall A, ord A -> R A
-| Rspl : forall B C A, spl A B C -> R B -> R C -> R A.
-
-Hint Constructors R : core.
-
-
-Lemma rfun : forall B, R B -> forall A, R A -> R (t_arrow A B).
-Proof.
-  intros B RB.
-  induction RB; intros; eauto.
-Qed.
-
-Lemma rrcd : forall A, R A-> forall l, R (t_rcd l A).
-Proof.
-  intros A RA.
-  induction RA; intros; eauto.
-Qed.
-
-Lemma decideR : forall A, R A.
-Proof.
-  introv. induction* A.
-  - apply~ rfun.
-  - apply~ rrcd.
-Qed.
-
-Ltac inductionT A := assert (r: R A) by apply (decideR A); induction r.
-
-
-
 (* topLike *)
 Lemma topLike_arrow_inv : forall A B,
     topLike (t_arrow A B) -> topLike B.
@@ -103,96 +107,150 @@ Proof.
   introv H. inverts~ H.
 Qed.
 
+#[export]
 Hint Immediate topLike_arrow_inv topLike_and_l_inv topLike_and_r_inv: core.
 
 
-Lemma topLike_combine: forall A B C,
+Lemma topLike_spl_combine: forall A B C,
     spl C A B -> topLike A -> topLike B -> topLike C.
 Proof.
   introv s tl1 tl2. induction* s.
   inverts tl1. inverts tl2. auto.
 Qed.
 
-Lemma topLike_split_l: forall A B C,
+Lemma topLike_split_l_inv: forall A B C,
     topLike C -> spl C A B -> topLike A.
 Proof.
   introv tl s. induction* s.
   inverts* tl.
 Qed.
 
-Lemma topLike_split_r: forall A B C,
+Lemma topLike_split_r_inv: forall A B C,
     topLike C -> spl C A B -> topLike B.
 Proof.
   introv tl s. induction* s.
   inverts* tl.
 Qed.
 
-Hint Immediate topLike_combine : core.
-Hint Immediate topLike_split_l topLike_split_r : core.
+#[export]
+Hint Immediate topLike_spl_combine topLike_split_l_inv topLike_split_r_inv : core.
 
-
-(* topLike specification *)
+(* topLike specification eqv *)
 Lemma topLike_super_top: forall A,
-    topLike A <-> sub t_top A.
+    topLike A <-> algo_sub t_top A.
 Proof with eauto.
   split; intros H.
-  - inductionT A...
+  - proper_ind A...
   - inductions H... iauto.
 Qed.
 
-Hint Immediate topLike_super_top : core.
+Lemma toplike_sub : forall A B,
+    topLike A -> algo_sub A B -> topLike B.
+Proof.
+  introv TL S.
+  induction S; inverts* TL;
+    applys* topLike_spl_combine.
+Qed.
 
+#[export]
+ Hint Resolve <- topLike_super_top : core.
+
+#[export]
+Hint Immediate topLike_super_top  toplike_sub : core.
 
 
 (* subtyping *)
-Lemma sub_l_andl : forall A B C, sub A C -> sub (t_and A B) C.
+Lemma sub_l_andl : forall A B C, algo_sub A C -> algo_sub (t_and A B) C.
 Proof.
   introv s. induction* s.
 Qed.
 
-Lemma sub_l_andr : forall A B C, sub B C -> sub (t_and A B) C.
+Lemma sub_l_andr : forall A B C, algo_sub B C -> algo_sub (t_and A B) C.
 Proof.
   introv s. induction* s.
 Qed.
 
 Lemma sub_fun : forall A B C D,
-    sub B D -> sub C A -> sub (t_arrow A B) (t_arrow C D).
+    algo_sub B D -> algo_sub C A -> algo_sub (t_arrow A B) (t_arrow C D).
 Proof.
   introv s. induction* s.
 Qed.
 
 Lemma sub_rcd : forall A B l,
-    sub A B -> sub (t_rcd l A) (t_rcd l B).
+    algo_sub A B -> algo_sub (t_rcd l A) (t_rcd l B).
 Proof.
   introv H.
   induction* H.
-Defined.
+Qed.
 
+#[export]
 Hint Resolve sub_l_andl sub_l_andr sub_fun sub_rcd: core.
 
-
-Lemma refl : forall A, sub A A.
+Lemma sub_reflexivity : forall A, algo_sub A A.
 Proof.
   introv. induction* A.
 Qed.
 
-Hint Resolve refl : core.
+#[export]
+Hint Resolve sub_reflexivity : core.
 
-
+(* around split and subtyping *)
 Lemma spl_sub_l : forall A B C,
-    spl A B C -> sub A B.
+    spl A B C -> algo_sub A B.
 Proof.
   introv H. induction* H.
 Qed.
 
 Lemma spl_sub_r : forall A B C,
-    spl A B C -> sub A C.
+    spl A B C -> algo_sub A C.
 Proof.
   introv H. induction* H.
 Qed.
 
+#[export]
+Hint Immediate spl_sub_l spl_sub_r : core.
+
+(* splitting does not lose or add information to a type *)
+Lemma split_sub: forall A B C,
+    spl A B C -> algo_sub A (t_and B C) /\ algo_sub (t_and B C) A.
+Proof with eauto.
+  intros A B C H.
+  split.
+  - lets~: spl_sub_l H. lets~: spl_sub_r H.
+    apply~ S_and...
+  - induction H...
+Qed.
+
+(* generalize S_top to all toplike types *)
+Lemma toplike_super_any : forall A B,
+    topLike A -> algo_sub B A.
+Proof.
+  introv TL.
+  proper_ind A; auto.
+  applys~ S_and H.
+  - applys* IHr1.
+  - applys* IHr2.
+Qed.
+
+#[export]
+ Hint Immediate toplike_super_any : core.
+
+(* some subtyping inversion lemmas *)
+(* inversion on left split *)
+Lemma sub_inversion_split_l : forall T A B C,
+    algo_sub T A -> spl T B C -> ord A -> algo_sub B A \/ algo_sub C A.
+Proof.
+  intros. gen B C.
+  induction H; intros; try solve_false; split_unify; eauto.
+  - (* arrow *)
+    forwards*: IHalgo_sub2.
+  - (* rec *)
+    forwards*: IHalgo_sub.
+Qed.
+
+(* inversion on right split *)
 Lemma sub_r_spl_l : forall T A B C,
-    sub T A -> spl A B C -> sub T B.
+    algo_sub T A -> spl A B C -> algo_sub T B.
 Proof.
   introv Hsub Hspl.
   inverts Hsub; solve_false.
@@ -200,45 +258,65 @@ Proof.
 Qed.
 
 Lemma sub_r_spl_r : forall T A B C,
-    sub T A -> spl A B C -> sub T C.
+    algo_sub T A -> spl A B C -> algo_sub T C.
 Proof.
   introv Hsub Hspl.
   inverts Hsub; solve_false.
   split_unify.
 Qed.
 
-Hint Immediate spl_sub_l spl_sub_r sub_r_spl_l sub_r_spl_r : core.
+Lemma sub_inversion_split_r : forall A B C D,
+    algo_sub A B -> spl B C D -> algo_sub A C /\ algo_sub A D.
+Proof with (try solve_false; split_unify).
+  introv Hsub Hspl. gen C D.
+  inductions Hsub; intros; eauto...
+Qed.
 
+#[export]
+Hint Immediate sub_r_spl_l sub_r_spl_r : core.
+
+(* prove trans via proper type *)
+Lemma sub_transtivity : forall A B C,
+    algo_sub A B -> algo_sub B C -> algo_sub A C.
+Proof with (try solve_false; split_unify; eauto).
+  introv S1 S2. gen A C.
+  proper_ind B; intros;
+    try solve [inductions S2; eauto].
+  - (* arrow *)
+    inductions S2... clear IHS2_1 IHS2_2.
+    (* S_arr *)
+    inductions S1...
+    + applys* S_top.
+  - (* rcd *)
+    inductions S2... clear IHS2.
+    (* S_rcd *)
+    inductions S1...
+    + applys* S_top.
+      applys* toplike_sub H1.
+  - (* split A B C *)
+    gen A B.
+    proper_ind C0; (* the type at the end *)
+      introv S1 S2 Hspl HRb IH;
+      try solve [ (* if it is an ordinary type *)
+            forwards~ (?&?): sub_inversion_split_r S1 Hspl;
+            forwards~ [?|?]: sub_inversion_split_l S2; eauto ].
+    (* splittable type *)
+    forwards* (?&?): sub_inversion_split_r S2 H.
+Qed.
+
+#[export]
+Hint Immediate sub_transtivity : core.
+
+(* any part of a toplike type is a toplike type *)
 Example sub_spl_demo : forall A B C,
-    sub t_top A -> spl A B C -> sub A B /\ sub A C /\ sub t_top B /\ sub t_top C.
+    algo_sub t_top A -> spl A B C -> algo_sub A B /\ algo_sub A C /\ algo_sub t_top B /\ algo_sub t_top C.
 Proof.
   jauto.
 Qed.
 
-
-Lemma andr_l_inv : forall A B C,
-    sub A (t_and B C) -> sub A B.
-Proof.
-  introv H. inductions H ; eauto; solve_false.
-  split_unify.
-Qed.
-
-Lemma andr_r_inv : forall A B C,
-    sub A (t_and B C) -> sub A C.
-Proof.
-  introv H. inductions H ; eauto; solve_false.
-  split_unify.
-Qed.
-
-Lemma andl_inv : forall A B C,
-    sub (t_and A B) C -> ord C -> sub A C \/ sub B C.
-Proof.
-  introv s o. inductions s; eauto; solve_false.
-Qed.
-
-Hint Immediate andr_l_inv andr_r_inv andl_inv : core.
-
-
+(******************************************************************************)
+(* an alternative proof method *)
+(* prove transtivity via typ_size *)
 Lemma typ_size_lg_z : forall T, size_typ T > 0.
 Proof.
   introv.
@@ -256,7 +334,7 @@ Qed.
 Ltac eomg :=
   pose proof (typ_size_lg_z);
   pose proof (exp_size_lg_z);
-  try omega; auto; simpl in *; try omega.
+  try lia; auto; simpl in *; try lia.
 
 
 Lemma split_decrease_size: forall A B C,
@@ -265,26 +343,7 @@ Proof.
   introv H. induction* H; eomg.
 Qed.
 
-Lemma topLike_super_any: forall T A,
-    topLike T -> sub A T.
-Proof.
-  introv H. assert (exists i, (size_typ T) < i) by eauto.
-  inverts H0. gen T.
-  induction x; intros; auto.
-  - inverts H1.
-  -
-    destructT T; eauto.
-    +
-      forwards (?&?): split_decrease_size H0.
-      forwards*: IHx x0. eomg.
-      forwards*: IHx x1. eomg.
-Qed.
-
-Hint Immediate topLike_super_any : core.
-
-
-Ltac wapply H := eapply H; try eassumption.
-
+#[export]
 Hint Extern 0 => match goal with
                  | [ H1: topLike (t_arrow _ ?D), H2: ~topLike ?D |- False ] => (
                      inverts H1;
@@ -305,46 +364,32 @@ Ltac indTypSize s :=
       intros; match goal with | [ H : _ < 0 |- _ ] => inverts H end
     | intros ].
 
-
-Section sub_trans.
-
-Lemma splitl_inv : forall A A1 A2 C,
-    spl A A1 A2 -> sub A C -> ord C -> sub A1 C \/ sub A2 C.
-Proof.
-  intros A A1 A2 C s. gen C. induction s; intros.
-  - applys* andl_inv.
-  - inverts~ H; solve_false.
-    lets~ [?|?]: (IHs D0).
-  - inverts~ H; solve_false.
-    lets~ [?|?]: (IHs D0).
-Qed.
-
+#[local]
 Hint Extern 0 =>
   match goal with
-  | [ IH: forall _ , _ , H1: sub  ?A ?B , H2: sub ?B ?C |- sub ?A ?C ] =>
+  | [ IH: forall _ , _ , H1: algo_sub  ?A ?B , H2: algo_sub ?B ?C |- algo_sub ?A ?C ] =>
     (forwards: IH H1 H2; eomg)
   end : core.
 
-Lemma trans : forall A B C, sub A B -> sub B C -> sub A C.
+Section sub_trans.
+Lemma trans : forall A B C, algo_sub A B -> algo_sub B C -> algo_sub A C.
 Proof.
   introv s1 s2.
   indTypSize (size_typ A + size_typ B + size_typ C).
-  destructT C.
+  lets [?|(?&?&?)]: ord_or_split C.
   - (* ord C *)
-    destructT B.
+    lets [?|(?&?&?)]: ord_or_split B.
     + (* ord B *)
       inverts keep s2 as s2_1 s2_2 s2_3;
         inverts s1 as s1_1 s1_2 s1_3; solve_false; auto.
-      * (* topLike B *)
-        applys~ S_top. applys TL_arr. applys topLike_super_top.
-        inverts s1_2. applys* IH C0. eomg.
-      *
-        applys~ S_top. applys TL_rcd. applys topLike_super_top.
-        inverts s1_2. applys* IH C0. eomg.
+      * (* topLike arr *)
+        applys* S_top.
+      * (* topLike rcd *)
+        applys* S_top.
     + (* spl B x x0 *)
       (* splitl_inv turns B into x or x0 *)
       lets (?&?): split_decrease_size B. eauto.
-      forwards~ [s2' |s2']: splitl_inv s2. eauto.
+      forwards~ [s2' |s2']: sub_inversion_split_l s2 H0.
       applys* IH s2'. eomg.
       applys* IH s2'. eomg.
   - (* spl C x x0 *)
@@ -356,59 +401,46 @@ Proof.
 Qed.
 
 End sub_trans.
+(******************************************************************************)
 
-
-Hint Immediate trans : core.
-
-Lemma split_sub: forall A B C,
-    spl A B C -> sub A (t_and B C) /\ sub (t_and B C) A.
-Proof with eauto.
-  intros A B C H.
-  split.
-  - lets~: spl_sub_l H. lets~: spl_sub_r H.
-    apply~ S_and...
-  - induction H...
-Qed.
-
-
+(*
 Hint Extern 0 => match goal with
-                 | [ |- sub (t_and ?A ?B) ?A ] => apply sub_l_andl
-                 | [ |- sub (t_and ?A ?B) ?B ] => apply sub_l_andr
-                 | [ H: sub ?A (t_and ?B ?C) |- sub ?A ?B ] => eapply (trans _ (t_and B C))
-                 | [ H: sub ?A (t_and ?B ?C) |- sub ?A ?C ] => eapply (trans _ (t_and B C))
+                 | [ |- algo_sub (t_and ?A ?B) ?A ] => apply sub_l_andl
+                 | [ |- algo_sub (t_and ?A ?B) ?B ] => apply sub_l_andr
+                 | [ H: algo_sub ?A (t_and ?B ?C) |- algo_sub ?A ?B ] => eapply (trans _ (t_and B C))
+                 | [ H: algo_sub ?A (t_and ?B ?C) |- algo_sub ?A ?C ] => eapply (trans _ (t_and B C))
                  end : core.
-
+*)
 
 Ltac auto_sub :=
   repeat (auto ;
           match goal with
-          | [ |- sub (t_and ?C ?D) (t_and ?A ?B) ] => (eapply S_and; try apply Sp_and)
-          | [ |- sub (t_and (t_arrow ?A ?B) (t_arrow ?A ?C)) (t_arrow ?A (t_and ?B ?C)) ] => (eapply S_and)
-          | [ H1: sub ?A ?B, H2: sub ?B ?C |- sub ?A ?C ] =>
+          | [ |- algo_sub (t_and ?C ?D) (t_and ?A ?B) ] => (eapply S_and; try apply Sp_and)
+          | [ |- algo_sub (t_and (t_arrow ?A ?B) (t_arrow ?A ?C)) (t_arrow ?A (t_and ?B ?C)) ] => (eapply S_and)
+          | [ H1: algo_sub ?A ?B, H2: algo_sub ?B ?C |- algo_sub ?A ?C ] =>
             (forwards: trans H1 H2; auto)
-          | [ H: sub t_top ?A |- sub _ ?A ] =>
+          | [ H: algo_sub t_top ?A |- algo_sub _ ?A ] =>
             (apply topLike_super_top in H; apply S_top; auto)
-          | [ H: topLike ?A |- sub _ (t_arrow _ ?A) ] =>
+          | [ H: topLike ?A |- algo_sub _ (t_arrow _ ?A) ] =>
             (apply TL_arr in H; apply S_top; auto)
 
-          | [ H1: spl ?A ?B ?C, H2: ord ?D, H3: sub ?A ?D |- _ ] => (
-              forwards [?|?]: splitl_inv H1 H2 H3;
+          | [ H1: spl ?A ?B ?C, H2: ord ?D, H3: algo_sub ?A ?D |- _ ] => (
+              forwards [?|?]: sub_inversion_split_l H1 H2 H3;
               clear H3)
           | [ H1: spl ?A ?B ?C |- _ ] => (
               forwards : split_sub H1;
               forwards : spl_sub_l H1;
               forwards : spl_sub_r H1;
               clear H1)
-          | [ |- sub (t_arrow ?A ?B) (t_arrow ?C ?D) ] => apply sub_fun
-          | [ H1: sub ?A ?B |- sub ?A ?C ] =>
-            assert ( sub B C ) by auto
+          | [ |- algo_sub (t_arrow ?A ?B) (t_arrow ?C ?D) ] => apply sub_fun
+          | [ H1: algo_sub ?A ?B |- algo_sub ?A ?C ] =>
+            assert ( algo_sub B C ) by auto
           end).
 
 
-
-(* declarative subtyping equivalence *)
-Theorem dsub_eq: forall A B,
-    dsub A B <-> sub A B.
+(* modular subtyping <=> algorithmic subtyping *)
+Theorem modular_sub_eqv: forall A B,
+    msub A B <-> algo_sub A B.
 Proof.
   split; introv H;
   induction* H.

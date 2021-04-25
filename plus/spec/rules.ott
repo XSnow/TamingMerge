@@ -78,13 +78,6 @@ vl :: 'vl_' ::=  {{ com value or projection label }}
 st :: 'st_' ::=  {{ com input type or projection label }} 
   | A            ::  :: ty
   | { l }        ::  :: la
-   
-ls  {{ tex \mathcal{L} }} , fs {{ tex \mathcal{L} }} :: 'ls_' ::= {{ com algorithmic subtyping queue and application context}} {{ coq list st }} 
-  | []           ::  :: empty      {{ coq nil }}
-                                   {{ tex \cdot }}
-  | ls , st      ::  :: cons1      {{ coq ([[ls]] ++ (cons [[st]] nil)) }}
-  | st , ls      ::  :: cons2      {{ coq (cons [[st]] [[ls]]) }}
-  | ( ls )       :: S:: paren      {{ coq 0 }}
 
 
 terminals :: 'terminals_' ::=
@@ -370,10 +363,10 @@ A1 -> A2 * { l : A }
 
 
 defns
-OSubtyping :: '' ::=
+OriginalBCDDeclarativeSubtyping :: '' ::=
 
 defn
-A < B  :: :: osub :: OS_
+A < B  :: :: original_bcd_sub :: OS_
 {{ com Original BCD Declarative Subtyping (\textless)}}
 {{ tex [[A]] \leq [[B]] }}
 by
@@ -436,11 +429,11 @@ A < B
 
 
 defns
-Subtyping :: '' ::=
+AlgorithmicSubtyping :: '' ::=
 
 defn
-A <: B  :: :: sub :: S_
-{{ com New Subtyping (\textless :)}}
+A <: B  :: :: algo_sub :: S_
+{{ com Algorithmic (Modular) Subtyping }}
 {{ tex [[A]] [[<:]] [[B]] }}
 by
 
@@ -489,12 +482,12 @@ A <: D
 
 
 defns
-DecSubtyping :: '' ::=
+ModularSubtyping :: '' ::=
 
 defn
-A <:: B  :: :: dsub :: DS_
-{{ com Declarative Subtyping (\textless ::)}}
-{{ tex [[A]] [[<:]]_d [[B]] }}
+A <:: B  :: :: msub :: MS_
+{{ com Modular Subtyping (without ordinary-conditions)}}
+{{ tex [[A]] [[<:]]_m [[B]] }}
 by
 
 
@@ -541,7 +534,7 @@ SubSubtyping :: '' ::=
 
 defn
 A <<: B  :: :: subsub :: SubSub_
-{{ com BCD Strict Subtyping (\textless\textless:)}}
+{{ com BCD Runtime Subtyping }}
 {{ tex [[A]] \ll [[B]] }}
 by
 
@@ -581,7 +574,7 @@ ConvertToArrowType :: '' ::=
 
 defn
 A > B  :: :: arrTyp :: AT_
-{{ com convert a type to an arrow type or a record type (its super type) (\textgreater)}}
+{{ com Applicative Distributivity: convert a type to an arrow type or a record type (its super type) }}
 {{ tex [[A]] \rhd [[B]] }}
 by
 

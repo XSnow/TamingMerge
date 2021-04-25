@@ -6,7 +6,6 @@ Require Import syntax_ott
                Disjoint_n_toplike.
 
 Require Import List. Import ListNotations.
-Require Import Strings.String.
 
 
 Definition relation (X:Type) := X -> X -> Prop.
@@ -65,9 +64,9 @@ Section Star.
 
 End Star.
 
-Hint Constructors star : core.
+#[export] Hint Constructors star : core.
 
-Hint Resolve star_trans star_one : core.
+#[export] Hint Resolve star_trans star_one : core.
 
 
 
@@ -145,7 +144,7 @@ Proof.
   - inverts* Val.
 Qed.
 
-Hint Immediate value_merge_l_inv value_merge_r_inv value_lc TypedReduce_prv_value : core.
+#[export] Hint Immediate value_merge_l_inv value_merge_r_inv value_lc TypedReduce_prv_value : core.
 
 
 Lemma step_not_value: forall (v:exp),
@@ -171,7 +170,7 @@ Proof.
 Qed.
 
 
-Hint Extern 0 => try match goal with
+#[export] Hint Extern 0 => try match goal with
                      | [ H: value (e_anno _ _) |- _ ] =>
                        inverts H
                      | [ H: value (e_app _ _) |- _ ] =>
@@ -203,8 +202,8 @@ Proof.
   apply~ lc_body_exp_wrt_exp.
 Qed.
 
-Hint Immediate abs_lc_inv : core.
-Hint Resolve abs_lc_open: core.
+#[export] Hint Immediate abs_lc_inv : core.
+#[export] Hint Resolve abs_lc_open: core.
 
 Lemma TypedReduce_l_lc : forall v1 A v2,
     TypedReduce v1 A v2 -> lc_exp v1.
@@ -220,7 +219,7 @@ Proof.
   induction* H.
 Qed.
 
-Hint Immediate TypedReduce_l_lc TypedReduce_r_lc : core.
+#[export] Hint Immediate TypedReduce_l_lc TypedReduce_r_lc : core.
 
 Lemma papp_1_lc: forall v1 v2 e,
     papp v1 v2 e -> lc_exp v1.
@@ -244,7 +243,7 @@ Proof.
   induction* H.
 Qed.
 
-Hint Immediate papp_1_lc papp_2_lc papp_3_lc : core.
+#[export] Hint Immediate papp_1_lc papp_2_lc papp_3_lc : core.
 
 Lemma step_1_lc: forall e1 e2,
     step e1 e2 -> lc_exp e1.
@@ -263,7 +262,7 @@ Proof.
   apply~ lc_body_exp_wrt_exp.
 Qed.
 
-Hint Immediate step_1_lc step_2_lc : core.
+#[export] Hint Immediate step_1_lc step_2_lc : core.
 
 
 Lemma step_prv_prevalue : forall u1 u2,
@@ -289,12 +288,12 @@ Proof.
   induction~ H. inverts* H.
 Qed.
 
-Hint Immediate step_prv_prevalue consistent_prevalue1 consistent_prevalue2: core.
+#[export] Hint Immediate step_prv_prevalue consistent_prevalue1 consistent_prevalue2: core.
 
 
 (* Check Mode *)
 Lemma Typing_chk2inf: forall G v A,
-    Typing G v Chk A -> exists B, Typing G v Inf B /\ sub B A.
+    Typing G v Chk A -> exists B, Typing G v Inf B /\ algo_sub B A.
 Proof.
   intros G v A Typ.
   inductions Typ; try solve [inverts Val].
@@ -304,7 +303,7 @@ Qed.
 
 
 Lemma Typing_chk_sub: forall G e A B,
-    Typing G e Chk A -> sub A B -> Typing G e Chk B.
+    Typing G e Chk A -> algo_sub A B -> Typing G e Chk B.
 Proof.
   intros G e A B H H0.
   inductions H.
@@ -336,7 +335,7 @@ Proof.
   solve_uniq.
 Qed.
 
-Hint Immediate Typing_regular_1 Typing_regular_2 : core.
+#[export] Hint Immediate Typing_regular_1 Typing_regular_2 : core.
 
 Lemma Typing_weaken : forall G E F e dir T,
     Typing (E ++ G) e dir T ->
@@ -375,10 +374,10 @@ Lemma fv_in_dom: forall G e dir T,
 Proof.
   intros G e dir T H.
   induction H; simpl; try fsetdec.
-  - Case "typing_var".
+  - (* typing_var*)
     apply binds_In in H0.
     fsetdec.
-  - Case "typing_abs".
+  - (* typing_abs*)
     pick fresh x.
     assert (Fx : fv_exp (e ^ x) [<=] dom ([(x,A)] ++ G))
       by eauto.
@@ -386,7 +385,7 @@ Proof.
     assert (Fy : fv_exp e [<=] fv_exp (e ^ x)) by
         eapply fv_exp_open_exp_wrt_exp_lower.
     fsetdec.
-  - Case "typing_fix".
+  - (* typing_fix*)
     pick fresh x.
     assert (Fx : fv_exp (e ^ x) [<=] dom ([(x,A)] ++ G))
       by eauto.
@@ -414,7 +413,8 @@ Proof.
   fsetdec.
 Qed.
 
-Local Hint Resolve subsub_refl : core.
+#[local] Hint Resolve subsub_refl : core.
+
 Lemma Typing_subst_2 : forall (E F : ctx) e u S S' dir T (z : atom),
     Typing (F ++ [(z,S)] ++ E) e dir T ->
     Typing E u Inf S' ->
@@ -491,11 +491,11 @@ Proof.
     rewrite Eq1.
     rewrite Eq2.
     eauto.
-  - (* sub *)
+  - (* algo_sub *)
     forwards* (?&?&?): IHTyp.
     exists B. split*.
     apply subsub2sub in H1.
-    assert (sub x B) by auto_sub.
+    assert (algo_sub x B) by auto_sub.
     forwards*: Typ_sub H0 H1.
 Qed.
 
@@ -584,7 +584,7 @@ Qed.
 
 (* Infer Mode & Check Mode *)
 Lemma Typing_inf_chk_sub: forall G e A B,
-    Typing G e Inf A -> Typing G e Chk B -> sub A B.
+    Typing G e Inf A -> Typing G e Chk B -> algo_sub A B.
 Proof.
   intros G e A B H H0.
   lets (?&?&?): Typing_chk2inf H0.
@@ -601,4 +601,4 @@ Proof.
   eauto.
 Qed.
 
-Hint Immediate Typing_inf_chk_sub Typing_chk_sub Typing_app_subsume : core.
+#[export] Hint Immediate Typing_inf_chk_sub Typing_chk_sub Typing_app_subsume : core.
