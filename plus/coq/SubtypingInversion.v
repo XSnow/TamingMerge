@@ -158,24 +158,38 @@ Qed.
 #[export]
 Hint Immediate topLike_super_top  toplike_sub : core.
 
-
 (* subtyping *)
+(* generalize S_top *)
+Lemma toplike_super_any : forall A B,
+    topLike A -> algo_sub B A.
+Proof.
+  introv TL.
+  proper_ind A; auto.
+  applys~ S_and H.
+  - applys* IHr1.
+  - applys* IHr2.
+Qed.
+
+(* generalize S_andl *)
 Lemma sub_l_andl : forall A B C, algo_sub A C -> algo_sub (t_and A B) C.
 Proof.
   introv s. induction* s.
 Qed.
 
+(* generalize S_andr *)
 Lemma sub_l_andr : forall A B C, algo_sub B C -> algo_sub (t_and A B) C.
 Proof.
   introv s. induction* s.
 Qed.
 
+(* generalize S_arr *)
 Lemma sub_fun : forall A B C D,
     algo_sub B D -> algo_sub C A -> algo_sub (t_arrow A B) (t_arrow C D).
 Proof.
   introv s. induction* s.
 Qed.
 
+(* generalize S_rcd *)
 Lemma sub_rcd : forall A B l,
     algo_sub A B -> algo_sub (t_rcd l A) (t_rcd l B).
 Proof.
@@ -184,8 +198,19 @@ Proof.
 Qed.
 
 #[export]
+Hint Immediate toplike_super_any : core.
+#[export]
 Hint Resolve sub_l_andl sub_l_andr sub_fun sub_rcd: core.
 
+(* modular subtyping <=> algorithmic subtyping *)
+Theorem modular_sub_eqv: forall A B,
+    msub A B <-> algo_sub A B.
+Proof.
+  split; introv H;
+  induction* H.
+Qed.
+
+(* algorithmic subtyping relexivity *)
 Lemma sub_reflexivity : forall A, algo_sub A A.
 Proof.
   introv. induction* A.
@@ -220,20 +245,6 @@ Proof with eauto.
     apply~ S_and...
   - induction H...
 Qed.
-
-(* generalize S_top to all toplike types *)
-Lemma toplike_super_any : forall A B,
-    topLike A -> algo_sub B A.
-Proof.
-  introv TL.
-  proper_ind A; auto.
-  applys~ S_and H.
-  - applys* IHr1.
-  - applys* IHr2.
-Qed.
-
-#[export]
- Hint Immediate toplike_super_any : core.
 
 (* some subtyping inversion lemmas *)
 (* inversion on left split *)
@@ -436,12 +447,3 @@ Ltac auto_sub :=
           | [ H1: algo_sub ?A ?B |- algo_sub ?A ?C ] =>
             assert ( algo_sub B C ) by auto
           end).
-
-
-(* modular subtyping <=> algorithmic subtyping *)
-Theorem modular_sub_eqv: forall A B,
-    msub A B <-> algo_sub A B.
-Proof.
-  split; introv H;
-  induction* H.
-Qed.
