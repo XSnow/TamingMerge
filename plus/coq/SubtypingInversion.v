@@ -248,10 +248,10 @@ Qed.
 
 (* some subtyping inversion lemmas *)
 (* inversion on left split *)
-Lemma sub_inversion_split_l : forall T A B C,
-    algo_sub T A -> spl T B C -> ord A -> algo_sub B A \/ algo_sub C A.
+Lemma sub_inversion_split_l : forall A B A1 A2,
+    algo_sub A B -> spl A A1 A2 -> ord B -> algo_sub A1 B \/ algo_sub A2 B.
 Proof.
-  intros. gen B C.
+  intros. gen A1 A2.
   induction H; intros; try solve_false; split_unify; eauto.
   - (* arrow *)
     forwards*: IHalgo_sub2.
@@ -260,26 +260,26 @@ Proof.
 Qed.
 
 (* inversion on right split *)
-Lemma sub_r_spl_l : forall T A B C,
-    algo_sub T A -> spl A B C -> algo_sub T B.
+Lemma sub_r_spl_l : forall A B B1 B2,
+    algo_sub A B -> spl B B1 B2 -> algo_sub A B1.
 Proof.
   introv Hsub Hspl.
   inverts Hsub; solve_false.
   split_unify.
 Qed.
 
-Lemma sub_r_spl_r : forall T A B C,
-    algo_sub T A -> spl A B C -> algo_sub T C.
+Lemma sub_r_spl_r : forall A B B1 B2,
+    algo_sub A B -> spl B B1 B2 -> algo_sub A B2.
 Proof.
   introv Hsub Hspl.
   inverts Hsub; solve_false.
   split_unify.
 Qed.
 
-Lemma sub_inversion_split_r : forall A B C D,
-    algo_sub A B -> spl B C D -> algo_sub A C /\ algo_sub A D.
+Lemma sub_inversion_split_r : forall A B B1 B2,
+    algo_sub A B -> spl B B1 B2 -> algo_sub A B1 /\ algo_sub A B2.
 Proof with (try solve_false; split_unify).
-  introv Hsub Hspl. gen C D.
+  introv Hsub Hspl. gen B1 B2.
   inductions Hsub; intros; eauto...
 Qed.
 
@@ -308,7 +308,7 @@ Proof with (try solve_false; split_unify; eauto).
     gen A B.
     proper_ind C0; (* the type at the end *)
       introv S1 S2 Hspl HRb IH;
-      try solve [ (* if it is an ordinary type *)
+      try solve [ (* if C0 is an ordinary type *)
             forwards~ (?&?): sub_inversion_split_r S1 Hspl;
             forwards~ [?|?]: sub_inversion_split_l S2; eauto ].
     (* splittable type *)
@@ -414,15 +414,6 @@ Qed.
 End sub_trans.
 (******************************************************************************)
 
-(*
-Hint Extern 0 => match goal with
-                 | [ |- algo_sub (t_and ?A ?B) ?A ] => apply sub_l_andl
-                 | [ |- algo_sub (t_and ?A ?B) ?B ] => apply sub_l_andr
-                 | [ H: algo_sub ?A (t_and ?B ?C) |- algo_sub ?A ?B ] => eapply (trans _ (t_and B C))
-                 | [ H: algo_sub ?A (t_and ?B ?C) |- algo_sub ?A ?C ] => eapply (trans _ (t_and B C))
-                 end : core.
-*)
-
 Ltac auto_sub :=
   repeat (auto ;
           match goal with
@@ -447,3 +438,33 @@ Ltac auto_sub :=
           | [ H1: algo_sub ?A ?B |- algo_sub ?A ?C ] =>
             assert ( algo_sub B C ) by auto
           end).
+
+
+(* original declarative bcd subtyping <=> algorithmic subtyping *)
+
+Lemma declarative_sub_tl : forall A B, topLike B -> original_bcd_sub A B.
+Proof.
+  introv Htl. gen A.
+  induction Htl; eauto.
+Qed.
+
+Lemma declarative_sub_split : forall A B B1 B2,
+    spl B B1 B2 -> original_bcd_sub A B1 -> original_bcd_sub A B2 ->
+    original_bcd_sub A B.
+Proof with (try solve_false; split_unify).
+  introv Hspl Hsub1 Hsub2. gen A.
+  induction* Hspl.
+  - assert (original_bcd_sub (t_and (t_arrow A C) (t_arrow A D)) (t_arrow A B)) by eauto.
+    eauto.
+  - assert (original_bcd_sub (t_and (t_rcd l C) (t_rcd l D)) (t_rcd l B)) by eauto.
+    eauto.
+Qed.
+
+Theorem declarative_sub_eqv: forall A B,
+    original_bcd_sub A B <-> algo_sub A B.
+Proof.
+  split; introv H;
+    induction* H.
+  - applys~ declarative_sub_tl.
+  - applys~ declarative_sub_split H.
+Qed.
