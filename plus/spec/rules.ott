@@ -261,40 +261,6 @@ ordinary {l:B}
 
 
 defns
-TopLikeR :: '' ::=
-
-defn
-topLikeR A :: :: topLikeR :: TLR_
-{{ com Top-like Type R }}
-{{ tex [[topl]][[topl]][[A]][[topr]][[topr]] }}
-by
-
-
----------------- :: top
-topLikeR Top 
-
-
-split C A B
-topLikeR A
-topLikeR B
----------------- :: and
-topLikeR C
-
-
-ordinary B
-topLikeR B
----------------- :: arr
-topLikeR A -> B
-
-
-ordinary B
-topLikeR B
----------------- :: rcd
-topLikeR {l:B}
-
-
-
-defns
 Disjoint :: '' ::=
 
 defn A * B :: :: disjoint    :: 'D_'
@@ -614,7 +580,7 @@ Semantics :: '' ::=
 defn
 v -> A  v'  :: :: TypedReduce :: TReduce_
 {{ tex [[v]]\,[[|->]]_{[[A]]}\,[[v']] }}
-{{ com Typed Reduce }}
+{{ com Typed Reduction }}
 by
 
 

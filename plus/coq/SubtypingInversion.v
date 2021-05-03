@@ -36,7 +36,7 @@ Proof.
   - apply~ rrcd.
 Qed.
 
-Ltac proper_ind A := assert (r: R A) by apply (types_are_proper A); induction r.
+Ltac proper_ind A := assert (r: R A) by apply (types_are_proper A); inductions r.
 
 
 (* split *)
@@ -285,6 +285,46 @@ Qed.
 
 #[export]
 Hint Immediate sub_r_spl_l sub_r_spl_r : core.
+
+(* to prove inversion lemma for arrow types *)
+(* which is not necessary for later proof *)
+Lemma sub_trans_spl_l : forall A A1 A2 B,
+    spl A A1 A2 -> ord B -> algo_sub A1 B -> algo_sub A B.
+Proof with (solve_false).
+  introv Hspl Hord Hs. gen B.
+  induction* Hspl; intros.
+  - inverts* Hs...
+  - inverts* Hs...
+Qed.
+
+Lemma sub_trans_spl_r : forall A A1 A2 B,
+    spl A A1 A2 -> ord B -> algo_sub A2 B -> algo_sub A B.
+Proof with (solve_false).
+  introv Hspl Hord Hs. gen B.
+  induction* Hspl; intros.
+  - inverts* Hs...
+  - inverts* Hs...
+Qed.
+
+Lemma sub_inversion_arrow : forall A B C D,
+    algo_sub (t_arrow A B) (t_arrow C D) -> (algo_sub C A /\ algo_sub B D) \/ topLike D.
+Proof with (simpl in *; solve_false; split_unify; try eassumption; eauto 3).
+  introv s.
+  proper_ind (t_arrow C D).
+  - clear IHr1 IHr2 r1 r2. gen C D.
+    proper_ind (t_arrow A B); intros.
+    + inverts s...
+    + inverts keep H;
+      forwards~ [?|?]: sub_inversion_split_l s H.
+      * forwards~ [(?&?)|?]: IHr1 H0 H1.
+        left. split*. applys~ sub_trans_spl_l H5.
+      * forwards~ [(?&?)|?]: IHr2 H0 H1.
+        left. split*. applys~ sub_trans_spl_r H5.
+  - inverts keep H.
+    forwards~ (?&?): sub_inversion_split_r s H.
+    forwards~ [(?&?)|?]: IHr1 H0;
+      forwards~ [(?&?)|?]: IHr2 H1; eauto.
+Qed.
 
 (* prove trans via proper type *)
 Lemma sub_transtivity : forall A B C,

@@ -7,20 +7,6 @@ Require Import
 
 
 (* topLike *)
-Theorem topLike_eqv: forall A,
-    topLike A <-> topLikeR A.
-Proof with eauto.
-  split; intros H.
-  - apply topLike_super_top in H.
-    inductions H...
-    induction~ H0; inverts H...
-  - apply topLike_super_top.
-    inductions H; auto; eauto;
-      apply topLike_super_top in IHtopLikeR;
-      apply~ S_top.
-Qed.
-
-
 Lemma topLike_spl : forall A B C,
     spl C A B -> topLike A -> topLike B -> topLike C.
 Proof with eauto.

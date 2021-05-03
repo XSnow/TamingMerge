@@ -23,19 +23,19 @@ Inductive exp : Set :=  (*r expressions *)
  | e_rcd (l:i) (e:exp) (*r record *)
  | e_proj (e:exp) (l:i) (*r projection *).
 
-Definition ctx : Set := list ( atom * typ ).
-
 Inductive dirflag : Set :=  (*r checking direction *)
  | Inf : dirflag
  | Chk : dirflag.
 
-Inductive st : Set :=  (*r input type or projection label *)
- | st_ty (A:typ)
- | st_la (l:i).
-
 Inductive vl : Set :=  (*r value or projection label *)
  | vl_exp (v:exp)
  | vl_la (l:i).
+
+Definition ctx : Set := list ( atom * typ ).
+
+Inductive st : Set :=  (*r input type or projection label *)
+ | st_ty (A:typ)
+ | st_la (l:i).
 
 (* EXPERIMENTAL *)
 (** auxiliary functions on the new list types *)
@@ -217,24 +217,6 @@ Inductive ord : typ -> Prop :=    (* defn ord *)
  | O_rcd : forall (l:i) (B:typ),
      ord B ->
      ord (t_rcd l B).
-
-(* defns TopLikeR *)
-Inductive topLikeR : typ -> Prop :=    (* defn topLikeR *)
- | TLR_top : 
-     topLikeR t_top
- | TLR_and : forall (C A B:typ),
-     spl C A B ->
-     topLikeR A ->
-     topLikeR B ->
-     topLikeR C
- | TLR_arr : forall (A B:typ),
-     ord B ->
-     topLikeR B ->
-     topLikeR (t_arrow A B)
- | TLR_rcd : forall (l:i) (B:typ),
-     ord B ->
-     topLikeR B ->
-     topLikeR (t_rcd l B).
 
 (* defns Disjoint *)
 Inductive disjoint : typ -> typ -> Prop :=    (* defn disjoint *)
@@ -618,6 +600,6 @@ Inductive Typing : ctx -> exp -> dirflag -> typ -> Prop :=    (* defn Typing *)
 
 
 (** infrastructure *)
-Hint Constructors value topLike spl ord topLikeR disjoint original_bcd_sub algo_sub msub subsub arrTyp TypedReduce papp step prevalue pType consistent Typing lc_exp lc_vl : core.
+Hint Constructors value topLike spl ord disjoint original_bcd_sub algo_sub msub subsub arrTyp TypedReduce papp step prevalue pType consistent Typing lc_exp lc_vl : core.
 
 

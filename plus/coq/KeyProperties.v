@@ -129,31 +129,19 @@ Proof with (solve_false; auto).
   }
   intros A v1 v2 v1' v2' TL Val1 Val2 Red1 Red2.
   gen v1' v2'.
-  apply topLike_eqv in TL.
-  induction TL; intros.
-  -
-    forwards*: HH Val1 Red1.
-    forwards*: HH Val2 Red2.
-    subst*.
-  -
-    inverts Red1...
-    inverts Red2...
-    forwards* (Heq1&Heq2): split_unique H3 H.
-    forwards* (Heq1'&Heq2'): split_unique H0 H.
-    subst.
-    forwards*: IHTL1 H1 H4.
-    forwards*: IHTL2 H2 H5.
-    congruence.
-  -
-    apply topLike_eqv in TL.
-    forwards*: HH Val1 Red1.
-    forwards*: HH Val2 Red2.
-    subst*.
-  -
-    apply topLike_eqv in TL.
-    forwards*: HH Val1 Red1.
-    forwards*: HH Val2 Red2.
-    subst*.
+  proper_ind A; inverts TL; intros;
+    try solve [ (* ordinary *)
+          forwards*: HH Val1 Red1;
+          forwards*: HH Val2 Red2;
+          subst* ];
+    try solve [ (* splittable *)
+          inverts H;
+          inverts Red1; solve_false; auto;
+          inverts Red2; solve_false; auto;
+          split_unify;
+          forwards*: IHr1;
+          forwards*: IHr2;
+          congruence].
 Qed.
 
 
