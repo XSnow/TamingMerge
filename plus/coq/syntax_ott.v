@@ -23,19 +23,15 @@ Inductive exp : Set :=  (*r expressions *)
  | e_rcd (l:i) (e:exp) (*r record *)
  | e_proj (e:exp) (l:i) (*r projection *).
 
-Inductive dirflag : Set :=  (*r checking direction *)
- | Inf : dirflag
- | Chk : dirflag.
-
 Inductive vl : Set :=  (*r value or projection label *)
  | vl_exp (v:exp)
  | vl_la (l:i).
 
 Definition ctx : Set := list ( atom * typ ).
 
-Inductive st : Set :=  (*r input type or projection label *)
- | st_ty (A:typ)
- | st_la (l:i).
+Inductive dirflag : Set :=  (*r checking direction *)
+ | Inf : dirflag
+ | Chk : dirflag.
 
 (* EXPERIMENTAL *)
 (** auxiliary functions on the new list types *)
@@ -386,7 +382,7 @@ Inductive arrTyp : typ -> typ -> Prop :=    (* defn arrTyp *)
      arrTyp B (t_rcd l B2) ->
      arrTyp (t_and A B) (t_rcd l (t_and A2 B2)).
 
-(* defns Semantics *)
+(* defns TypedReduction *)
 Inductive TypedReduce : exp -> typ -> exp -> Prop :=    (* defn TypedReduce *)
  | TReduce_refl : forall (i5:i),
      TypedReduce (e_lit i5) t_int (e_lit i5)
@@ -421,8 +417,10 @@ Inductive TypedReduce : exp -> typ -> exp -> Prop :=    (* defn TypedReduce *)
      spl A B C ->
      TypedReduce v B v1 ->
      TypedReduce v C v2 ->
-     TypedReduce v A (e_merge v1 v2)
-with papp : exp -> vl -> exp -> Prop :=    (* defn papp *)
+     TypedReduce v A (e_merge v1 v2).
+
+(* defns ParallelApplication *)
+Inductive papp : exp -> vl -> exp -> Prop :=    (* defn papp *)
  | Papp_abs : forall (A:typ) (e:exp) (B:typ) (v v':exp),
      lc_exp (e_abs A e B) ->
      TypedReduce v A v' ->
@@ -436,8 +434,10 @@ with papp : exp -> vl -> exp -> Prop :=    (* defn papp *)
  | Papp_merge : forall (v1 v2:exp) (vl5:vl) (e1 e2:exp),
      papp v1 vl5 e1 ->
      papp v2 vl5 e2 ->
-     papp (e_merge v1 v2) vl5 (e_merge e1 e2)
-with step : exp -> exp -> Prop :=    (* defn step *)
+     papp (e_merge v1 v2) vl5 (e_merge e1 e2).
+
+(* defns Reduction *)
+Inductive step : exp -> exp -> Prop :=    (* defn step *)
  | Step_papp : forall (v1 v2 e:exp),
      value v1 ->
      value v2 ->

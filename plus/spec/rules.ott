@@ -75,10 +75,6 @@ vl :: 'vl_' ::=  {{ com value or projection label }}
   | v            ::  :: exp
   | { l }        ::  :: la
 
-st :: 'st_' ::=  {{ com input type or projection label }} 
-  | A            ::  :: ty
-  | { l }        ::  :: la
-
 
 terminals :: 'terminals_' ::=
   | \            ::  :: lambda     {{ tex \lambda }}
@@ -575,7 +571,7 @@ A&B > {l: A2&B2}
 
 
 defns
-Semantics :: '' ::=
+TypedReduction :: '' ::=
 
 defn
 v -> A  v'  :: :: TypedReduce :: TReduce_
@@ -628,6 +624,10 @@ v ->C v2
 v ->A v1,,v2
 
 
+
+defns
+ParallelApplication :: '' ::=
+
 defn
 v1 ; vl --> e :: :: papp :: Papp_
 {{ tex ([[v1]]~[[vl]])~[[-->]]~[[e]] }}
@@ -653,6 +653,10 @@ v2 ; vl --> e2
 ------------------------------- :: merge
 v1,,v2 ; vl --> e1,,e2
 
+
+
+defns
+Reduction :: '' ::=
 
 defn
 e -->  e'  :: :: step :: Step_
