@@ -1,5 +1,7 @@
-# Coq Formalization
-Taming the Merge Operator: A Type-Directed Operational Semantics Approach
+This is the Coq formalization of paper `Taming the Merge Operator`, which
+will appear in the Journal of Functional Programming.
+
+# Code Structure
 
 - [simple/coq/](./simple/coq) for Coq formalization of the λ<sub>i</sub> calculus
 - [simple/spec/](./simple/spec) for Ott specification of the λ<sub>i</sub> calculus
@@ -18,6 +20,16 @@ which is included in the directory.
 
 
 ### Prerequisites
+
+0. `ott` and `lngen` are used to generate `syntax_ott.v` and `rules_inf.v`.
+   You can run all code without them installed unless you want to modify the definitions.
+   In that cases you can refer to the instructions:
+
+    - [Ott](https://github.com/ott-lang/ott)
+    - [LNgen](https://github.com/plclub/lngen/blob/master/README.txt)
+
+    If you install lngen via cabal and want to be able to call it directly,
+    you may have to change your $PATH, e.g., `export PATH=$HOME/.cabal/bin:$PATH`.
 
 1. Install Coq 8.13.1.
    The recommended way to install Coq is via `OPAM`. Refer to
