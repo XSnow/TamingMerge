@@ -196,9 +196,11 @@ Proof with (simpl; try lia; auto).
     subst~.
     forwards* (?&R1) : TypedReduce_progress (e_lit i0).
     forwards* (?&R2) : TypedReduce_progress (e_lit i5).
-    forwards*: TypedReduce_unique R1.
-    forwards*: TypedReduce_unique R2.
-    forwards*: Cons. subst*. congruence.
+    forwards*: Cons. subst*.
+    forwards R1': TReduce_refl i0. forwards R2': TReduce_refl i5.
+    forwards*: TypedReduce_unique R1 R1'.
+    forwards*: TypedReduce_unique R2 R2'.
+    congruence.
   - (* abs *)
     forwards* [?|(?&?)]: consistencySpec_lams_inv Cons.
     + applys* C_disjoint.

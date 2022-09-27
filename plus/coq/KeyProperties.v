@@ -123,7 +123,7 @@ Proof with (solve_false; auto).
   assert (HH: forall v v' A, value v -> ord A -> topLike A -> TypedReduce v A v' -> v' = e_top). {
     intros.
     induction H2...
-    - inverts~ H. inverts* H1.
+    - inverts~ H. inverts* H1...
     - inverts~ H.
     - inverts~ H.
   }

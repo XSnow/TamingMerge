@@ -15,7 +15,6 @@ Proof with eauto.
   inductions H...
 Qed.
 
-
 Lemma toplike_sub: forall A B,
     topLike A -> algo_sub A B -> topLike B.
 Proof.
@@ -23,6 +22,13 @@ Proof.
   apply topLike_super_top in H.
   apply topLike_super_top.
   auto_sub.
+Qed.
+
+Lemma topLike_spl_inv : forall A B C,
+    spl C A B -> topLike C -> topLike A /\ topLike B.
+Proof with eauto.
+  introv Hspl Htop.
+  split; applys* toplike_sub Htop.
 Qed.
 
 
@@ -50,7 +56,7 @@ Lemma disjoint_andl: forall A1 A2 B,
 Proof.
   intros A1 A2 B H.
   induction B;
-    inverts* H.
+    inverts* H; intuition eauto.
 Qed.
 
 
@@ -59,7 +65,7 @@ Lemma disjoint_andr: forall A B1 B2,
 Proof.
   intros A B1 B2 H.
   induction A;
-    inverts* H.
+    inverts* H; intuition eauto.
 Qed.
 
 
@@ -67,7 +73,7 @@ Lemma disjoint_rcd: forall A B l,
     disjoint (t_rcd l A) (t_rcd l B) -> disjoint A B.
 Proof.
   introv H.
-  inverts* H.
+  inverts* H; intuition eauto.
 Qed.
 
 #[export] Hint Immediate disjoint_rcd : core.
@@ -83,23 +89,23 @@ Proof with (solve_false; auto).
   - inverts Dis; try solve [apply~ topLike_super_top];
       try solve [inverts S1; inverts S2; solve_false; auto]...
     + inverts S1...
-      forwards: IH H6 S2; eomg...
-      forwards: IH H6 S2; eomg...
+      forwards: IH H6 S2; elia...
+      forwards: IH H6 S2; elia...
     + inverts S2...
-      forwards: IH S1 H6; eomg...
-      forwards: IH S1 H6; eomg...
+      forwards: IH S1 H6; elia...
+      forwards: IH S1 H6; elia...
     + inverts S1; inverts S2...
       apply TL_arr.
-      forwards: IH H0 H6 H10; eomg...
+      forwards: IH H0 H6 H10; elia...
     + inverts S1; inverts S2...
       apply TL_rcd.
-      forwards: IH H0 H5 H7; eomg...
+      forwards: IH H0 H5 H7; elia...
   -
     inverts S1; inverts S2...
     split_unify.
     forwards (?&?): split_decrease_size H.
     applys topLike_spl H;
-      eapply IH; try apply Dis; auto; eomg.
+      eapply IH; try apply Dis; auto; elia.
 Qed.
 
 
@@ -139,6 +145,13 @@ Proof.
   - apply disjoint_completeness.
 Qed.
 
+Lemma disjoint_toplike : forall A B,
+    topLike A -> disjoint A B.
+Proof.
+  introv H.
+  applys disjoint_eqv. introv HS1 HS2.
+  eauto.
+Qed.
 
 Lemma disjoint_domain_type: forall A B C B',
     disjoint (t_arrow B C) A -> disjoint (t_arrow B' C) A.
@@ -219,6 +232,46 @@ Proof.
 Qed.
 
 
+Lemma disjoint_or_exists: forall A B,
+    disjoint A B \/ exists C, ord C /\ algo_sub A C /\ algo_sub B C /\ ~ topLike C.
+Proof with solve_false.
+  intros A B. gen B.
+  induction A; intros; auto.
+  - induction B; auto.
+    + right. exists t_int.
+      repeat split~...
+    + lets [?|(?&?&?&?&?)]: IHB1.
+      * lets [?|(?&?&?&?&?)]: IHB2.
+        ** left*.
+        ** right. exists* x.
+      * right. exists* x.
+  - clear IHA1.
+    induction B; auto.
+    + clear IHB1 IHB2.
+      lets [?|(?&?&?&?&?)]: (IHA2 B2); jauto.
+      * right. exists* (t_arrow (t_and A1 B1) x).
+    + lets [?|(?&?&?&?&?)]: IHB1.
+      * lets [?|(?&?&?&?&?)]: IHB2; auto.
+        ** right. exists* x.
+      * right. exists* x.
+  - lets [?|(?&?&?&?&?)]: IHA1.
+    lets [?|(?&?&?&?&?)]: IHA2.
+    * left*.
+    * right. exists* x.
+    * right. exists* x.
+  - (* rcd *)
+    induction~ B.
+    + lets [?|(?&?&?&?&?)]: IHB1.
+      * lets [?|(?&?&?&?&?)]: IHB2; auto.
+        ** right. exists* x.
+      * right. exists* x.
+    + destruct* (l == l0). subst.
+      lets~ [?|(?&?&?&?&?)]: (IHA B).
+      right. exists (t_rcd l0 x). splits*.
+      intros HF. apply H2. inverts~ HF.
+Qed.
+
+
 Lemma disjoint_dec: forall A B,
     disjoint A B \/ ~ disjoint A B.
 Proof with auto.
@@ -257,19 +310,17 @@ Proof with auto.
 Qed.
 
 (* subsub *)
+#[export] Hint Constructors subsub : core.
+
 Lemma subsub2sub : forall A B,
     subsub A B -> algo_sub A B.
-Proof with eauto .
+Proof with eauto.
   intros A B H.
   induction H...
-  - apply split_sub in H. destruct H.
-    apply split_sub in H0. destruct H0.
-    assert (algo_sub (t_and A1 A2) (t_and B1 B2))...
-    applys trans...
+  applys* sub_transtivity (t_and A1 A2).
 Qed.
 
 #[export] Hint Immediate subsub2sub : core.
-#[export] Hint Constructors subsub : core.
 
 Lemma subsub_refl : forall A,
     subsub A A.
@@ -288,9 +339,7 @@ Proof.
   induction Hss; intros; solve_false.
   - split_unify. eauto.
   - split_unify. forwards* (?&?&?&?&?): IHHss H4.
-    exists. repeat split*.
   - split_unify. forwards* (?&?&?&?&?): IHHss H3.
-    exists. repeat split*.
   - split_unify. eauto.
 Qed.
 
@@ -339,6 +388,7 @@ Lemma subsub_disjoint_l : forall x A B,
 Proof.
   intros x A B H H0.
   forwards*: disjoint_subsub2 H.
+  applys* H1.
 Qed.
 
 Lemma subsub_disjoint_r : forall x A B,
@@ -436,7 +486,7 @@ Proof with (auto; solve_false).
       inverts keep s1; simpl in SizeInd...
       * assert (subsub A3 B2). {
           applys IH; try eassumption.
-          eomg.
+          elia.
         }
         eauto.
       * (* top *)
@@ -449,12 +499,12 @@ Proof with (auto; solve_false).
         lets (?&?): split_decrease_size H1.
         lets (?&?): split_decrease_size H2.
         lets (?&?): split_decrease_size H5.
-        applys SubSub_split; try eassumption; applys IH; try eassumption; eomg.
+        applys SubSub_split; try eassumption; applys IH; try eassumption; elia.
     + (* rcd *)
       inverts s1; simpl in SizeInd...
       * assert (subsub A1 B0). {
           applys IH; try eassumption.
-          eomg.
+          elia.
         }
         eauto.
       * (* top *)
@@ -467,7 +517,7 @@ Proof with (auto; solve_false).
         lets (?&?): split_decrease_size H0.
         lets (?&?): split_decrease_size H1.
         lets (?&?): split_decrease_size H4.
-        applys SubSub_split; try eassumption; applys IH; try eassumption; eomg.
+        applys SubSub_split; try eassumption; applys IH; try eassumption; elia.
     + (* top *)
       inverts s1...
     + (* spl *)
@@ -478,11 +528,11 @@ Proof with (auto; solve_false).
         lets (?&?): split_decrease_size H.
         assert (subsub x B1). {
           applys IH; try eassumption.
-          eomg.
+          elia.
         }
         assert (subsub x0 B2). {
           applys IH; try eassumption.
-          eomg.
+          elia.
         }
         applys~ SubSub_split H12 H13.
 Qed.

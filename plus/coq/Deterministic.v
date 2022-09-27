@@ -116,7 +116,7 @@ Qed.
 
 Theorem step_unique: forall A (e e1 e2 : exp),
     Typing nil e Inf A -> step e e1 -> step e e2 -> e1 = e2.
-Proof with eauto.
+Proof with solve_false.
   introv Typ Red1.
   gen A e2.
   lets Red1' : Red1.
@@ -125,12 +125,12 @@ Proof with eauto.
   - (* papp*)
     inverts* Red2.
     + forwards*: papp_unique H1 H7.
-    + forwards*: step_not_value H6.
-    + forwards*: step_not_value H6.
+    + forwards*: step_not_value H6...
+    + forwards*: step_not_value H6...
   - (* proj*)
     inverts* Red2.
     + forwards*: papp_unique2 H0 H5.
-    + forwards*: step_not_value H4.
+    + forwards*: step_not_value H4...
   - (* annov*)
     inverts* Red2.
     + (* annov*)
@@ -138,19 +138,16 @@ Proof with eauto.
       inverts H4.
       forwards*: TypedReduce_unique H0 H5.
     + (* anno*)
-      forwards*: step_not_value H4.
+      forwards*: step_not_value H4...
   - (* appl*)
     inverts Red2;
-      try solve [forwards*: step_not_value Red1].
+      try solve [forwards*: step_not_value Red1]...
     + (* appl*)
       inverts Typ.
-      forwards: IHRed1...
-      congruence.
+      forwards* : IHRed1. subst*.
   - (* appr*)
     inverts* Red2;
-      try solve [forwards*: step_not_value Red1].
-    + (* appl*)
-      forwards*: step_not_value H4.
+      try solve [forwards*: step_not_value Red1]...
     + (* appr*)
       inverts* Typ. lets (?&?&?): Typing_chk2inf H7.
       forwards*: IHRed1.
@@ -162,19 +159,17 @@ Proof with eauto.
       try solve [forwards*: step_not_value Red1_1];
       forwards*: IHRed1_1;
       forwards*: IHRed1_2;
-      subst*.
+      subst*...
   - (* mergel*)
     inverts* Red2;
-      try solve [forwards*: step_not_value H4].
+      try solve [forwards*: step_not_value H4]...
     + (* mergel*)
       inverts* Typ;
         forwards*: IHRed1;
         congruence.
   - (* merger*)
     inverts* Red2;
-      try solve [forwards*: step_not_value H2].
-    + (* mergel*)
-      forwards*: step_not_value H4.
+      try solve [forwards*: step_not_value H2]...
     + (* merger*)
       inverts* Typ;
         forwards*: IHRed1;
@@ -183,14 +178,15 @@ Proof with eauto.
     inverts* Red2;
       inverts* Typ;
       try solve [inverts* Red1];
-      try solve [lets*: step_not_value Red1].
+      try solve [lets*: step_not_value Red1]...
     inverts H1.
-    forwards*: IHRed1.
+    forwards*: IHRed1...
     congruence.
   - (* fix*)
     inverts* Red2.
   - (* rcd*)
     inverts* Typ. inverts* Red2. forwards*: IHRed1. congruence.
   - (* proj*)
-    inverts* Typ. inverts* Red2; try solve [forwards*: step_not_value Red1]. forwards*: IHRed1. congruence.
+    inverts* Typ. inverts* Red2; try solve [forwards*: step_not_value Red1]...
+    forwards*: IHRed1. congruence.
 Qed.

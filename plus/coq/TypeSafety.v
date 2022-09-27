@@ -45,7 +45,6 @@ Proof with eauto.
     inverts Typ. applys Typ_abs. intros. apply~ Typing_chk_sub.
   - (* rcd *)
     inverts Val. inverts Typ; forwards* (?&?&?&?): IHRed.
-    exists* (t_rcd l x).
   - (* mergel *)
     inverts Val. inverts Typ; forwards*: IHRed.
   - (* merger *)
@@ -181,7 +180,7 @@ Lemma consistent_steps: forall e1 e2 e1' e2' A B,
     (forall (e e' : exp) (A : typ),
          size_exp e < (size_exp e1 + size_exp e2) -> Typing [] e Inf A -> step e e' -> exists C, [] ⊢ e' ⇒ C /\ subsub C A) ->
     consistent e1' e2'.
-Proof with (simpl; lia).
+Proof with (simpl; elia).
   introv Typ1 Typ2 ST1 ST2 Cons IH. gen e1' e2' A B.
   induction Cons; intros; try solve [inverts ST1; inverts ST2; solve_false; eauto].
     + (* e:A ~ e:B *)
@@ -209,16 +208,17 @@ Proof with (simpl; lia).
       * (* value VS value *)
         applys* C_disjoint.
       * (* value VS step *)
-        forwards* (?&?&?): IH u2. assert (size_exp e1' >0) by eomg...
+        forwards* (?&?&?): IH u2... assert (0 < size_exp e1') by eauto using size_exp_min.
+        elia.
         forwards~: step_prv_prevalue ST2'. unify_pType e2'.
         applys* C_disjoint.
       * (* step VS value *)
-        forwards* (?&?&?): IH u1. assert (size_exp e2' >0) by eomg. lia.
+        forwards* (?&?&?): IH u1... assert (size_exp e2' >0) by eauto using size_exp_min. lia.
         forwards~: step_prv_prevalue ST1'. unify_pType e1'.
         applys* C_disjoint.
       * (* step VS step *)
-        forwards* (?&?&?): IH u1. assert (size_exp u2 >0) by eomg. lia.
-        forwards* (?&?&?): IH u2. assert (size_exp u1 >0) by eomg. lia.
+        forwards* (?&?&?): IH u1. assert (size_exp u2 >0) by eauto using size_exp_min. lia.
+        forwards* (?&?&?): IH u2. assert (size_exp u1 >0) by eauto using size_exp_min. lia.
         forwards~: step_prv_prevalue ST1'. unify_pType e1'.
         forwards~: step_prv_prevalue ST2'. unify_pType e2'.
         applys* C_disjoint.
@@ -260,26 +260,26 @@ Proof with (simpl; try lia; auto; try eassumption; auto).
   inverts keep Typ as Ht1 Ht2 Ht3 Ht4;
     try solve [inverts J]; repeat simpl in SizeInd.
   - (* typing_app *)
-    inverts J as J1 J2 J3; try forwards* (?&?&S2): IH J2; assert (size_exp e1 >0) by eomg; eomg.
-    + forwards*: papp_preservation J3.
+    inverts J as J1 J2 J3; try forwards* (?&?&S2): IH J2; assert (size_exp e1 >0) by eauto using size_exp_min; elia.
+     + forwards*: papp_preservation J3.
     + lets* ( ?&? & Harr & Hsub ): arrTyp_arr_subsub Ht2 S2.
     forwards* (?&?): subsub_arr_inv Hsub.
     + exists. split*. applys* Typ_app Ht2. applys* Typing_chk_sub.
   - (* typing_proj *)
-    inverts J as J1 J2 J3; try forwards* (?&?&S2): IH J1; eomg.
+    inverts J as J1 J2 J3; try forwards* (?&?&S2): IH J1; elia.
     + forwards*: papp_preservation2 J2.
     + lets* ( ? & Harr & Hsub ): arrTyp_rcd_subsub Ht2 S2.
       forwards* (?&?): subsub_rcd_inv Hsub.
   - (* typing_rcd *)
     (* disjoint *)
     inverts J as J1 J2 J3;
-    try forwards* (?&?&?): IH J1; eomg;
-    try forwards* (?&?&?): IH J2; eomg.
+    try forwards* (?&?&?): IH J1; elia;
+    try forwards* (?&?&?): IH J2; elia.
   - (* typing_merge *)
     (* disjoint *)
     inverts J as J1 J2 J3;
-    try forwards* (?&?&?): IH J1; eomg;
-    try forwards* (?&?&?): IH J2; eomg.
+    try forwards* (?&?&?): IH J1; elia;
+    try forwards* (?&?&?): IH J2; elia.
   - (* typing_anno *)
     inverts Ht1. inverts J as J1 J2 J3.
     + lets* (?&?): TypedReduce_preservation J2.
@@ -296,9 +296,9 @@ Proof with (simpl; try lia; auto; try eassumption; auto).
   - (* typing_mergev *) (* consistent merge *)
     inverts J as J1 J2 J3; forwards*: consistent_steps Ht4;
       (* consistent e1' e2' *)
-      try introv p1 p2 p3; try forwards* (?&?&?): IH p2 p3; eomg;
+      try introv p1 p2 p3; try forwards* (?&?&?): IH p2 p3; elia;
         (* typing for the two terms *)
-        try forwards* (?&?&?): IH J1; eomg; try forwards* (?&?&?): IH J2; eomg.
+        try forwards* (?&?&?): IH J1; elia; try forwards* (?&?&?): IH J2; elia.
   - (* subsumption *)
     forwards* (?&?&?): IH J...
     apply subsub2sub in H0.

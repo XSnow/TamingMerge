@@ -254,9 +254,9 @@ Proof.
   intros. gen A1 A2.
   induction H; intros; try solve_false; split_unify; eauto.
   - (* arrow *)
-    forwards*: IHalgo_sub2.
+    forwards* [?|?]: IHalgo_sub2.
   - (* rec *)
-    forwards*: IHalgo_sub.
+    forwards* [?|?]: IHalgo_sub.
 Qed.
 
 (* inversion on right split *)
@@ -368,31 +368,25 @@ Qed.
 (******************************************************************************)
 (* an alternative proof method *)
 (* prove transtivity via typ_size *)
-Lemma typ_size_lg_z : forall T, size_typ T > 0.
-Proof.
-  introv.
-  pose proof (size_typ_min) T.
-  inverts~ H.
-Qed.
-
-Lemma exp_size_lg_z : forall e, size_exp e > 0.
-Proof.
-  introv.
-  pose proof (size_exp_min) e.
-  inverts~ H.
-Qed.
-
-Ltac eomg :=
-  pose proof (typ_size_lg_z);
-  pose proof (exp_size_lg_z);
-  try lia; auto; simpl in *; try lia.
-
 
 Lemma split_decrease_size: forall A B C,
     spl A B C -> size_typ B < size_typ A /\ size_typ C < size_typ A.
 Proof.
-  introv H. induction* H; eomg.
+  introv H. pose proof (size_typ_min).
+  induction H;
+    simpl in *; simpl; intuition eauto; lia.
 Qed.
+
+Ltac spl_size :=
+  try repeat match goal with
+         | [ H: spl _ _ _ |- _ ] =>
+           ( lets (?&?): split_decrease_size H; clear H)
+             end.
+
+Ltac elia :=
+  try solve [pose proof (size_typ_min); pose proof (size_exp_min);
+             spl_size; simpl in *; simpl;
+             try lia].
 
 #[export]
 Hint Extern 0 => match goal with
@@ -419,7 +413,7 @@ Ltac indTypSize s :=
 Hint Extern 0 =>
   match goal with
   | [ IH: forall _ , _ , H1: algo_sub  ?A ?B , H2: algo_sub ?B ?C |- algo_sub ?A ?C ] =>
-    (forwards: IH H1 H2; eomg)
+    (forwards: IH H1 H2; elia)
   end : core.
 
 Section sub_trans.
@@ -441,13 +435,13 @@ Proof.
       (* splitl_inv turns B into x or x0 *)
       lets (?&?): split_decrease_size B. eauto.
       forwards~ [s2' |s2']: sub_inversion_split_l s2 H0.
-      applys* IH s2'. eomg.
-      applys* IH s2'. eomg.
+      applys* IH s2'. elia.
+      applys* IH s2'. elia.
   - (* spl C x x0 *)
     (* inversion turns C into x and x0 *)
     lets (?&?): split_decrease_size C. eauto.
-    forwards~ g1: IH s1 x. eauto. eomg.
-    forwards~ g2: IH s1 x0. eauto. eomg.
+    forwards~ g1: IH s1 x. eauto. elia.
+    forwards~ g2: IH s1 x0. eauto. elia.
     applys~ S_and H.
 Qed.
 
