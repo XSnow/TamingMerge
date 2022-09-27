@@ -1,18 +1,19 @@
-This is the Coq formalization of paper `Taming the Merge Operator`, which
-will appear in the Journal of Functional Programming.
+This is the Coq formalization of paper `Taming the Merge Operator`, in the Journal of Functional Programming.
 
 # Code Structure
 
-- [simple/coq/](./simple/coq) for Coq formalization of the λ<sub>i</sub> calculus
-- [simple/spec/](./simple/spec) for Ott specification of the λ<sub>i</sub> calculus
-- [plus/coq/](./plus/coq) for Coq formalization of the λ<sub>i</sub><sup>+</sup> calculus
-- [plus/spec/](./plus/spec) for Ott specification of the λ<sub>i</sub><sup>+</sup> calculus
+
+- [simple](./simple) for the λ<sub>i</sub> calculus
+- [plus](./plus) for the λ<sub>i</sub><sup>+</sup> calculus present in JFP
+- [plus_flex_proj](./plus_flex_proj) for the enhanced λ<sub>i</sub><sup>+</sup> calculus present in thesis
 - [pair_simple](./pair_simple) for the λ<sub>i</sub> calculus plus product types and pairs
+
+Each directory contains a sub-directory for Coq formalization and a sub-directory for Ott specification.
 
 
 ## Building Instructions
 
-Our Coq proofs are verified in **Coq 8.13.1**. We rely on two Coq libraries:
+Our Coq proofs are verified in **Coq 8.14.1**. We rely on two Coq libraries:
 [`metalib`](https://github.com/plclub/metalib) for the locally nameless
 representation in our proofs; and
 [`LibTactics.v`](http://gallium.inria.fr/~fpottier/ssphs/LibTactics.html),

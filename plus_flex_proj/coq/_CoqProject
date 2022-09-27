@@ -1,0 +1,12 @@
+-R . Top
+Consistency.v
+Deterministic.v
+Disjointness.v
+Infrastructure.v
+KeyProperties.v
+LibTactics.v
+Progress.v
+rules_inf.v
+SubtypingInversion.v
+syntax_ott.v
+TypeSafety.v
