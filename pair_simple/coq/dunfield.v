@@ -29,12 +29,12 @@ Fixpoint erase_anno (e:exp) : dexp :=
 
 Notation "| e |" := (erase_anno e) (at level 30, e at level 39).
 
-Require Import Omega.
+Require Import Lia.
 
 Ltac size_ind_auto :=
   ( eapply_first_lt_hyp ;
     try reflexivity;
-    try omega ;
+    try lia ;
     try eauto ).
 
 
@@ -77,7 +77,7 @@ Proof.
     rewrite <- erasure_open.
     eapply_first_lt_hyp;
     try (apply size_exp_open_exp_wrt_exp_var);
-    try omega.
+    try lia.
     apply H3.
   - (* fix *)
     pick fresh x.
@@ -87,7 +87,7 @@ Proof.
     rewrite <- erasure_open.
     eapply_first_lt_hyp;
     try (apply size_exp_open_exp_wrt_exp_var);
-    try omega.
+    try lia.
     apply H3.
 Qed.
 

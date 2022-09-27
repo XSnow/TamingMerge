@@ -32,11 +32,11 @@ which is included in the directory.
     If you install lngen via cabal and want to be able to call it directly,
     you may have to change your $PATH, e.g., `export PATH=$HOME/.cabal/bin:$PATH`.
 
-1. Install Coq 8.13.1.
+1. Install Coq 8.14.1.
    The recommended way to install Coq is via `OPAM`. Refer to
    [here](https://coq.inria.fr/opam/www/using.html) for detailed steps. Or one could
    download the pre-built packages for Windows and MacOS via
-   [here](https://github.com/coq/coq/releases/tag/V8.13.1). Choose a suitable installer
+   [here](https://github.com/coq/coq/releases/tag/V8.14.1). Choose a suitable installer
    according to your platform.
 
 2. Make sure `Coq` is installed (type `coqc` in the terminal, if you see "command
@@ -44,7 +44,7 @@ which is included in the directory.
    1. Open terminal
    2. `git clone https://github.com/plclub/metalib`
    3. `cd metalib/Metalib`
-   4. Make sure the version is correct by `git checkout 597fd7d0c93eb159274e84a39d554f10f1efccf8` (other versions may also work)
+   4. Make sure the version is correct by `git checkout be0f81cd12ee0e6e06863339cd3ee562dd94aaf9` (other versions may also work)
    5. `make install`
 
 ### Build and Compile the Proofs

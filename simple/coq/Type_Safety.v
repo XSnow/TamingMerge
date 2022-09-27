@@ -11,7 +11,7 @@ Require Import
         Typing.
 
 Require Import List. Import ListNotations.
-Require Import Arith Omega.
+Require Import Arith Lia.
 
 
 (* requires sub Top A -> toplike A *)
